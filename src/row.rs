@@ -18,13 +18,13 @@ impl Row {
         self.cells.len()
     }
 
-    pub fn insert_at(&mut self, x: usize, c: char) {
-        if self.cells.len() <= x {
-            self.cells.resize_with(x.saturating_add(1), Default::default);
+    pub fn insert_at(&mut self, col_idx: usize, c: char) {
+        if self.cells.len() <= col_idx {
+            self.cells.resize_with(col_idx.saturating_add(1), Default::default);
         }
 
-        // TODO: this could still be out-of-bounds if we're at the bounds of usize.
+        // TODO: this could still be out-of-bounds if col_idx is at the bounds of usize.
         // will need to do something about that eventually
-        self.cells[x].insert(c);
+        self.cells[col_idx].insert(c);
     }
 }

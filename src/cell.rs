@@ -4,8 +4,8 @@ pub struct Cell {
 }
 
 impl Cell {
-    pub fn to_str(&self) -> String {
-        self.text.clone() // maybe add a | at the end to differentiate between cells?
+    pub fn to_str(&self) -> &String {
+        &self.text // maybe add a | at the end to differentiate between cells?
     }
 
     pub fn len(&self) -> usize {
