@@ -16,15 +16,15 @@ impl Document {
         None
     }
 
-    pub fn mut_row(&mut self, y: usize) -> Option<&mut Row> {
-        if y < self.rows.len() {
-            return Some(&mut self.rows[y])
+    pub fn insert_at(&mut self, x: usize, y: usize, c: char) {
+        if self.rows.len() <= y {
+            self.rows.resize_with(y.saturating_add(1), Default::default);
         }
-
-        None
+        
+        self.rows[y].insert_at(x, c)
     }
 
-    pub fn at(&self, x: usize, y: usize) -> Option<Cell> {
+    pub fn at(&self, x: usize, y: usize) -> Option<&Cell> {
         if let Some(row) = self.row(y) {
             return row.at(x);
         }
@@ -34,11 +34,5 @@ impl Document {
 
     pub fn num_rows(&self) -> usize {
         self.rows.len()
-    }
-
-    pub fn insert_row(&mut self, y: usize) {
-        if self.rows.len() <= y {
-            self.rows.resize_with(y.saturating_add(1), Default::default);
-        }
     }
 }

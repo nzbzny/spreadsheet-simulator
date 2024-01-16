@@ -6,9 +6,9 @@ pub struct Row {
 }
 
 impl Row {
-    pub fn at(&self, x: usize) -> Option<Cell> {
+    pub fn at(&self, x: usize) -> Option<&Cell> {
         if x < self.len() {
-            return Some(self.cells[x].clone()) // TODO: make this a ref?
+            return Some(&self.cells[x]);
         }
 
         None
