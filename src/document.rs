@@ -6,7 +6,6 @@ use std::collections::HashMap;
 #[derive(Default)]
 pub struct Document {
     rows: HashMap<usize, Row>,
-    max_row: usize,
 }
 
 impl Document {
@@ -26,10 +25,6 @@ impl Document {
             row.insert_at(col_idx, c);
 
             self.rows.insert(row_idx, row);
-
-            if row_idx > self.max_row {
-                self.max_row = row_idx;
-            }
         }
     }
 
