@@ -3,6 +3,14 @@ pub struct Cell {
     text: String
 }
 
+impl From<char> for Cell {
+    fn from(c: char) -> Self {
+        Self {
+            text: String::from(c)
+        }
+    }
+}
+
 impl Cell {
     pub fn to_str(&self) -> &String {
         &self.text // maybe add a | at the end to differentiate between cells?

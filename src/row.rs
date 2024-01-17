@@ -1,14 +1,17 @@
 use crate::Cell;
 
+use std::collections::HashMap;
+
 #[derive(Default, Clone)]
 pub struct Row {
-    cells: Vec<Cell>
+    cells: HashMap<usize, Cell>,
+    max_col: usize,
 }
 
 impl Row {
     pub fn at(&self, x: usize) -> Option<&Cell> {
         if x < self.len() {
-            return Some(&self.cells[x]);
+            return self.cells.get(&x);
         }
 
         None
@@ -19,12 +22,15 @@ impl Row {
     }
 
     pub fn insert_at(&mut self, col_idx: usize, c: char) {
-        if self.cells.len() <= col_idx {
-            self.cells.resize_with(col_idx.saturating_add(1), Default::default);
+        if let Some(cell) = self.cells.get_mut(&col_idx) {
+            cell.insert(c);
+        } else {
+            self.cells.insert(col_idx, Cell::from(c));
+            
+            if col_idx > self.max_col {
+                self.max_col = col_idx;
+            }
         }
 
-        // TODO: this could still be out-of-bounds if col_idx is at the bounds of usize.
-        // will need to do something about that eventually
-        self.cells[col_idx].insert(c);
     }
 }

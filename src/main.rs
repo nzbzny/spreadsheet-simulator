@@ -16,5 +16,5 @@ fn main() {
     document.insert_at(0, 0, 'a');
     document.insert_at(0, 0, 'r');
 
-    println!("{}", document.at(0, 0).unwrap().to_str());
+    println!("{}", document.get_cell(0, 0).unwrap().to_str());
 }
