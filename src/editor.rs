@@ -4,6 +4,7 @@ use std::io::Stdout;
 
 use ratatui::Frame;
 use ratatui::backend::CrosstermBackend;
+use ratatui::layout::Rect;
 use ratatui::widgets::Borders;
 use ratatui::widgets::Block;
 use ratatui::widgets::Paragraph;
@@ -37,16 +38,46 @@ impl Editor {
            document: Document::default()
         }
     }
+/*
+pub struct Rect {
+    /// The x coordinate of the top left corner of the rect.
+    pub x: u16,
+    /// The y coordinate of the top left corner of the rect.
+    pub y: u16,
+    /// The width of the rect.
+    pub width: u16,
+    /// The height of the rect.
+    pub height: u16,
+}
+*/
 
     fn draw(frame: &mut Frame, editor: &Editor) {
-        let text = editor.get_text(editor.cursor_position.col, editor.cursor_position.row);
-        let paragraph = Paragraph::new(text).block(Block::new().borders(Borders::ALL));
         let mut size = frame.size();
         size.width /= 8;
         size.height /= 8;
 
-        frame.render_widget(paragraph, size);
+        let mut i: u16 = 0;
+        let mut j: u16 = 0;
 
+        while i < 8 {
+            while j < 8 {
+                let text = editor.get_text(/*editor.cursor_position.row + */(j as usize), /*editor.cursor_position.col + */(i as usize));
+                let paragraph = Paragraph::new(text).block(Block::new().borders(Borders::ALL));
+                let rect = Rect {
+                    x: size.x + (size.width * j),
+                    y: size.y + (size.height * i),
+                    width: size.width,
+                    height: size.height
+                };
+
+                frame.render_widget(paragraph, rect);
+                
+                j += 1;
+            }
+            
+            j = 0;
+            i += 1;
+        }
     }
 
     pub fn run(&mut self, mut terminal: Terminal<CrosstermBackend<Stdout>>) -> Result<(), std::io::Error> {
