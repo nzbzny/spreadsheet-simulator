@@ -47,7 +47,7 @@ impl Editor {
             let text = self.get_text(self.cursor_position.col, self.cursor_position.row);
 
             let _ = self.terminal.draw(|frame| {
-                let paragraph = Paragraph::new(text).block(Block::new().borders(Borders::ALL).border_type(BorderType::Rounded));
+                let paragraph = Paragraph::new(text).block(Block::new().borders(Borders::ALL));
                 let mut size = frame.size();
                 size.width /= 8;
                 size.height /= 8;
@@ -76,12 +76,12 @@ impl Editor {
 
     fn handle_normal_mode_press(&mut self, key: crossterm::event::KeyCode) {
         match key {
-            crossterm::event::KeyCode::Char('q') => {
-                self.should_quit = true
-            },
-            crossterm::event::KeyCode::Char('i') => {
-                self.mode = EditorMode::Insert
-            }
+            crossterm::event::KeyCode::Char('q') => self.should_quit = true,
+            crossterm::event::KeyCode::Char('i') => self.mode = EditorMode::Insert,
+            crossterm::event::KeyCode::Down => self.cursor_position.row = self.cursor_position.row.saturating_add(1),
+            crossterm::event::KeyCode::Up => self.cursor_position.row = self.cursor_position.row.saturating_sub(1),
+            crossterm::event::KeyCode::Left => self.cursor_position.col = self.cursor_position.col.saturating_sub(1),
+            crossterm::event::KeyCode::Right => self.cursor_position.col = self.cursor_position.col.saturating_add(1),
             crossterm::event::KeyCode::Esc => self.mode = EditorMode::Normal,
             _ => {}
         }
