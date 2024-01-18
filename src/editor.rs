@@ -1,12 +1,10 @@
 use crate::document::Document;
 
 use std::io::Stdout;
-use std::io::stdout;
 
 use ratatui::Frame;
 use ratatui::backend::CrosstermBackend;
 use ratatui::widgets::Borders;
-use ratatui::widgets::BorderType;
 use ratatui::widgets::Block;
 use ratatui::widgets::Paragraph;
 use ratatui::Terminal;
@@ -19,22 +17,20 @@ pub enum EditorMode {
 
 #[derive(Default)]
 pub struct Position {
-    col: usize,
-    row: usize
+    pub col: usize,
+    pub row: usize
 }
 
 pub struct Editor {
-    terminal: Terminal<CrosstermBackend<Stdout>>,
     mode: EditorMode,
     should_quit: bool,
-    cursor_position: Position,
+    pub cursor_position: Position,
     document: Document
 }
 
 impl Editor {
     pub fn default() -> Self {
         Self {
-           terminal: Terminal::new(CrosstermBackend::new(stdout())).unwrap(),
            mode: EditorMode::Normal,
            should_quit: false,
            cursor_position: Position::default(),
@@ -42,18 +38,20 @@ impl Editor {
         }
     }
 
-    pub fn run(&mut self) -> Result<(), std::io::Error> {
+    fn draw(frame: &mut Frame, editor: &Editor) {
+        let text = editor.get_text(editor.cursor_position.col, editor.cursor_position.row);
+        let paragraph = Paragraph::new(text).block(Block::new().borders(Borders::ALL));
+        let mut size = frame.size();
+        size.width /= 8;
+        size.height /= 8;
+
+        frame.render_widget(paragraph, size);
+
+    }
+
+    pub fn run(&mut self, mut terminal: Terminal<CrosstermBackend<Stdout>>) -> Result<(), std::io::Error> {
         loop {
-            let text = self.get_text(self.cursor_position.col, self.cursor_position.row);
-
-            let _ = self.terminal.draw(|frame| {
-                let paragraph = Paragraph::new(text).block(Block::new().borders(Borders::ALL));
-                let mut size = frame.size();
-                size.width /= 8;
-                size.height /= 8;
-
-                frame.render_widget(paragraph, size);
-            });
+            let _ = terminal.draw(|frame| { Editor::draw(frame, &self)});
 
             if crossterm::event::poll(std::time::Duration::from_millis(250))? {
                 if let crossterm::event::Event::Key(key) = crossterm::event::read()? {
