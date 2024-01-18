@@ -16,6 +16,10 @@ impl Cell {
         &self.text // maybe add a | at the end to differentiate between cells?
     }
 
+    pub fn text(&self) -> String {
+        self.text.clone()
+    }
+
     pub fn len(&self) -> usize {
         self.text.len()
     }
