@@ -127,16 +127,16 @@ impl Editor {
     fn handle_normal_mode_press(&mut self, key: crossterm::event::KeyCode) {
         match key {
             crossterm::event::KeyCode::Char('i') => self.mode = EditorMode::Insert,
-            crossterm::event::KeyCode::Down => {
+            crossterm::event::KeyCode::Down | crossterm::event::KeyCode::Char('j') => {
                 self.cursor_position.row = self.cursor_position.row.saturating_add(1)
             }
-            crossterm::event::KeyCode::Up => {
+            crossterm::event::KeyCode::Up | crossterm::event::KeyCode::Char('k') => {
                 self.cursor_position.row = self.cursor_position.row.saturating_sub(1)
             }
-            crossterm::event::KeyCode::Left => {
+            crossterm::event::KeyCode::Left | crossterm::event::KeyCode::Char('h') => {
                 self.cursor_position.col = self.cursor_position.col.saturating_sub(1)
             }
-            crossterm::event::KeyCode::Right => {
+            crossterm::event::KeyCode::Right | crossterm::event::KeyCode::Char('l') => {
                 self.cursor_position.col = self.cursor_position.col.saturating_add(1)
             }
             crossterm::event::KeyCode::Char(':') => {
