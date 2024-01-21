@@ -14,6 +14,7 @@ use ratatui::Terminal;
 pub enum EditorMode {
     Normal,
     Insert,
+    Command,
 }
 
 #[derive(Default)]
@@ -25,8 +26,9 @@ pub struct Position {
 pub struct Editor {
     mode: EditorMode,
     should_quit: bool,
-    pub cursor_position: Position,
+    cursor_position: Position,
     document: Document,
+    command: String,
 }
 
 impl Editor {
@@ -36,6 +38,7 @@ impl Editor {
             should_quit: false,
             cursor_position: Position::default(),
             document: Document::default(),
+            command: String::from(""),
         }
     }
     /*
@@ -107,6 +110,7 @@ impl Editor {
                         match self.mode {
                             EditorMode::Insert => self.handle_insert_mode_press(key.code),
                             EditorMode::Normal => self.handle_normal_mode_press(key.code),
+                            EditorMode::Command => self.handle_command_mode_press(key.code),
                         }
                     }
                 }
@@ -122,7 +126,6 @@ impl Editor {
 
     fn handle_normal_mode_press(&mut self, key: crossterm::event::KeyCode) {
         match key {
-            crossterm::event::KeyCode::Char('q') => self.should_quit = true,
             crossterm::event::KeyCode::Char('i') => self.mode = EditorMode::Insert,
             crossterm::event::KeyCode::Down => {
                 self.cursor_position.row = self.cursor_position.row.saturating_add(1)
@@ -135,6 +138,9 @@ impl Editor {
             }
             crossterm::event::KeyCode::Right => {
                 self.cursor_position.col = self.cursor_position.col.saturating_add(1)
+            }
+            crossterm::event::KeyCode::Char(':') => {
+                self.mode = EditorMode::Command
             }
             crossterm::event::KeyCode::Esc => self.mode = EditorMode::Normal,
             _ => {}
@@ -150,6 +156,36 @@ impl Editor {
             }
             _ => {}
         }
+    }
+
+    fn handle_command_mode_press(&mut self, key: crossterm::event::KeyCode) {
+        match key {
+            crossterm::event::KeyCode::Esc => {
+                self.command = String::from("");
+                self.mode = EditorMode::Normal;
+            }
+            crossterm::event::KeyCode::Char(c) => self.command.push(c),
+            crossterm::event::KeyCode::Enter => self.execute_command(),
+            _ => {}
+        }
+    }
+
+    fn execute_command(&mut self) {
+        match self.command.as_str() {
+            "q" => {
+                self.should_quit = true;
+            }
+            "w" => {
+                self.save();
+            }
+            _ => {}
+        }
+        self.command = String::from("");
+        self.mode = EditorMode::Normal;
+    }
+
+    fn save(&self) {
+        println!("saving file");
     }
 
     fn get_text(&self, col: usize, row: usize) -> String {
