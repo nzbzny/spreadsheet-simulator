@@ -9,11 +9,7 @@ pub struct Row {
 
 impl Row {
     pub fn at(&self, x: usize) -> Option<&Cell> {
-        if x < self.len() {
-            return self.cells.get(&x);
-        }
-
-        None
+        return self.cells.get(&x);
     }
 
     pub fn len(&self) -> usize {

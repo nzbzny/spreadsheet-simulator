@@ -10,11 +10,7 @@ pub struct Document {
 
 impl Document {
     pub fn get_row(&self, row_idx: usize) -> Option<&Row> {
-        if row_idx < self.rows.len() {
-            return self.rows.get(&row_idx);
-        }
-
-        None
+        return self.rows.get(&row_idx);
     }
 
     pub fn insert_at(&mut self, col_idx: usize, row_idx: usize, c: char) {
