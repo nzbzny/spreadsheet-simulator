@@ -56,13 +56,12 @@ pub struct Rect {
         size.width /= 8;
         size.height /= 8;
 
-        let mut i: u16 = 0;
+        let mut i: u16 = 0; // should start based on viewbox
         let mut j: u16 = 0;
 
         while i < 8 {
             while j < 8 {
-                let text = editor.get_text(/*editor.cursor_position.row + */(j as usize), /*editor.cursor_position.col + */(i as usize));
-                let paragraph = Paragraph::new(text).block(Block::new().borders(Borders::ALL));
+                let text = editor.get_text(j as usize, i as usize);
                 let rect = Rect {
                     x: size.x + (size.width * j),
                     y: size.y + (size.height * i),
@@ -70,8 +69,17 @@ pub struct Rect {
                     height: size.height
                 };
 
-                frame.render_widget(paragraph, rect);
-                
+                let mut block = Block::new().borders(Borders::ALL);
+
+                if (i as usize) == editor.cursor_position.row && (j as usize) == editor.cursor_position.col { 
+                    block = block.border_type(ratatui::widgets::BorderType::Thick)
+                        .border_style(ratatui::style::Style::new().add_modifier(ratatui::style::Modifier::BOLD));
+                }
+
+                let widget = Paragraph::new(text).block(block);
+
+                frame.render_widget(widget, rect);
+ 
                 j += 1;
             }
             
