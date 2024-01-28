@@ -62,6 +62,10 @@ impl Document {
     }
 
     pub fn save(&mut self) -> std::io::Result<()> {
+        if self.filename.is_none() {
+            return Err(std::io::Error::new(std::io::ErrorKind::Other, "No filename"));
+        }
+
         let mut doc_string = String::from("");
 
         for row_idx in 0..self.max_row().saturating_add(1) {

@@ -177,14 +177,14 @@ impl Editor {
                 match result {
                     Ok(_) => {},
                     Err(err) => {
-                        self.status_message = StatusMessage::from(&err.to_string());
+                        if err.kind() == std::io::ErrorKind::Other {
+                            self.command = Cell::default();
+                            return;
+                        } else {
+                            self.status_message = StatusMessage::from(&err.to_string());
+                        }
                     }
                 };
-
-                if self.mode == EditorMode::SaveAs {
-                    self.command = Cell::default();
-                    return;
-                }
             }
             _ => {
                 self.status_message = StatusMessage::from_string(
@@ -238,15 +238,16 @@ impl Editor {
         }
         
         self.status_message = StatusMessage::from_string(format!("Save as: {}", filename));
-        self.document.filename = Some(filename);
+        
+        if filename != "" {
+            self.document.filename = Some(filename);
+        }
     }
 
     fn save(&mut self) -> std::io::Result<()> {
         if self.document.filename.is_none() {
             self.mode = EditorMode::SaveAs;
             self.status_message = StatusMessage::from("Save as: ");
-
-            return Ok(());
         }
 
         self.document.save()
