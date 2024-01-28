@@ -4,6 +4,7 @@ mod cell;
 mod document;
 mod editor;
 mod row;
+mod ui;
 
 use cell::Cell;
 use editor::Editor;
