@@ -1,4 +1,5 @@
 use crate::Cell;
+use crate::editor::Position;
 use crate::Row;
 
 use std::collections::HashMap;
@@ -29,6 +30,14 @@ impl Document {
             return row.at(col_idx);
         }
 
+        None
+    }
+
+    pub fn get_mut_cell(&mut self, position: &Position) -> Option<&mut Cell> {
+        if let Some(row) = self.rows.get_mut(&position.row) {
+            return row.get_mut(position.col);
+        }
+        
         None
     }
 }

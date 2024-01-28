@@ -1,3 +1,4 @@
+use crate::Cell;
 use crate::document::Document;
 
 use std::io::Stdout;
@@ -17,7 +18,7 @@ pub enum EditorMode {
     Command,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Position {
     pub col: usize,
     pub row: usize,
@@ -28,7 +29,8 @@ pub struct Editor {
     should_quit: bool,
     cursor_position: Position,
     document: Document,
-    command: String,
+    command: Cell,
+    status_message: String,
 }
 
 impl Editor {
@@ -38,7 +40,8 @@ impl Editor {
             should_quit: false,
             cursor_position: Position::default(),
             document: Document::default(),
-            command: String::from(""),
+            command: Cell::default(),
+            status_message: String::from(""),
         }
     }
     /*
@@ -54,7 +57,7 @@ impl Editor {
     }
     */
 
-    fn draw(frame: &mut Frame, editor: &Editor) {
+    fn draw_spreadsheet(frame: &mut Frame, editor: &Editor) {
         let mut size = frame.size();
         size.width /= 8;
         size.height /= 8;
@@ -76,14 +79,14 @@ impl Editor {
 
                 if (row as usize) == editor.cursor_position.row
                     && (col as usize) == editor.cursor_position.col
-                {
-                    block = block
-                        .border_type(ratatui::widgets::BorderType::Thick)
-                        .border_style(
-                            ratatui::style::Style::new()
+                    {
+                        block = block
+                            .border_type(ratatui::widgets::BorderType::Thick)
+                            .border_style(
+                                ratatui::style::Style::new()
                                 .add_modifier(ratatui::style::Modifier::BOLD),
-                        );
-                }
+                                );
+                    }
 
                 let widget = Paragraph::new(text).block(block);
 
@@ -95,6 +98,31 @@ impl Editor {
             col = 0;
             row += 1;
         }
+    }
+
+    fn draw_status_message(frame: &mut Frame, editor: &Editor) {
+        let message = if editor.command.to_str() != "" {
+            &editor.command.to_string()
+        } else {
+            &editor.status_message
+        };
+        
+        let widget = Paragraph::new(message.clone());
+
+        let size = frame.size();
+        let rect = Rect {
+            x: size.x,
+            y: size.y + size.height - 1,
+            width: size.width,
+            height: 1,
+        };
+
+        frame.render_widget(widget, rect)
+    }
+
+    fn draw(frame: &mut Frame, editor: &Editor) {
+        Editor::draw_spreadsheet(frame, editor);
+        Editor::draw_status_message(frame, editor);
     }
 
     pub fn run(
@@ -140,7 +168,8 @@ impl Editor {
                 self.cursor_position.col = self.cursor_position.col.saturating_add(1)
             }
             crossterm::event::KeyCode::Char(':') => {
-                self.mode = EditorMode::Command
+                self.command.insert(':') ;
+                self.mode = EditorMode::Command;
             }
             crossterm::event::KeyCode::Esc => self.mode = EditorMode::Normal,
             _ => {}
@@ -153,6 +182,16 @@ impl Editor {
             crossterm::event::KeyCode::Char(c) => {
                 self.document
                     .insert_at(self.cursor_position.col, self.cursor_position.row, c)
+            },
+            crossterm::event::KeyCode::Left | crossterm::event::KeyCode::Right => {
+                if let Some(cell) = self.document.get_mut_cell(&self.cursor_position) {
+                    cell.move_cursor(key);
+                }
+            },
+            crossterm::event::KeyCode::Backspace | crossterm::event::KeyCode::Delete => {
+                if let Some(cell) = self.document.get_mut_cell(&self.cursor_position) {
+                    cell.handle_delete(key)
+                }
             }
             _ => {}
         }
@@ -161,26 +200,32 @@ impl Editor {
     fn handle_command_mode_press(&mut self, key: crossterm::event::KeyCode) {
         match key {
             crossterm::event::KeyCode::Esc => {
-                self.command = String::from("");
+                self.command = Cell::default();
                 self.mode = EditorMode::Normal;
             }
-            crossterm::event::KeyCode::Char(c) => self.command.push(c),
+            crossterm::event::KeyCode::Char(c) => self.command.insert(c),
             crossterm::event::KeyCode::Enter => self.execute_command(),
+            crossterm::event::KeyCode::Left | crossterm::event::KeyCode::Right => {
+                self.command.move_cursor(key);
+            },
+            crossterm::event::KeyCode::Delete | crossterm::event::KeyCode::Backspace => {
+                self.command.handle_delete(key);
+            },
             _ => {}
         }
     }
 
     fn execute_command(&mut self) {
-        match self.command.as_str() {
-            "q" => {
+        match self.command.to_str() {
+            ":q" => {
                 self.should_quit = true;
             }
-            "w" => {
+            ":w" => {
                 self.save();
             }
             _ => {}
         }
-        self.command = String::from("");
+        self.command = Cell::default();
         self.mode = EditorMode::Normal;
     }
 

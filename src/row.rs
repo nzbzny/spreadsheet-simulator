@@ -25,4 +25,8 @@ impl Row {
 
         self.cells.insert(col_idx, Cell::from(c));
     }
+
+    pub fn get_mut(&mut self, x: usize) -> Option<&mut Cell> {
+        return self.cells.get_mut(&x);
+    }
 }
