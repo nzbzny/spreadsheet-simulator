@@ -57,6 +57,7 @@ pub struct Editor {
     document: Document,
     pub command: Cell,
     pub status_message: StatusMessage,
+    pub viewbox_anchor: Position,
 }
 
 impl Editor {
@@ -87,6 +88,7 @@ impl Editor {
             document,
             command: Cell::default(),
             status_message: initial_status,
+            viewbox_anchor: Position::default(),
         }
     }
 
@@ -123,19 +125,45 @@ impl Editor {
         Ok(())
     }
 
+    fn move_viewbox(&mut self) {
+        if self.cursor_position.row < self.viewbox_anchor.row { // move viewbox up
+            self.viewbox_anchor.row = self.cursor_position.row;
+        }
+
+        if self.cursor_position.col < self.viewbox_anchor.col { // move viewbox left
+            self.viewbox_anchor.col = self.cursor_position.col;
+        }
+
+        // TODO: unhardcode this
+        let viewbox_height = 8;
+        let viewbox_width = 8;
+
+        if self.viewbox_anchor.row.saturating_add(viewbox_height) <= self.cursor_position.row { // move viewbox down
+            self.viewbox_anchor.row = self.cursor_position.row.saturating_sub(viewbox_height - 1);
+        }
+
+        if self.viewbox_anchor.col.saturating_add(viewbox_height) <= self.cursor_position.col { // move viewbox right
+            self.viewbox_anchor.col = self.cursor_position.col.saturating_sub(viewbox_width - 1);
+        }
+    }
+
     fn handle_normal_mode_press(&mut self, key: crossterm::event::KeyCode) {
         match key {
             crossterm::event::KeyCode::Down | crossterm::event::KeyCode::Char('j') => {
                 self.cursor_position.row = self.cursor_position.row.saturating_add(1);
+                self.move_viewbox();
             },
             crossterm::event::KeyCode::Up | crossterm::event::KeyCode::Char('k') => {
                 self.cursor_position.row = self.cursor_position.row.saturating_sub(1);
+                self.move_viewbox();
             },
             crossterm::event::KeyCode::Left | crossterm::event::KeyCode::Char('h') => {
                 self.cursor_position.col = self.cursor_position.col.saturating_sub(1);
+                self.move_viewbox();
             },
             crossterm::event::KeyCode::Right | crossterm::event::KeyCode::Char('l') => {
                 self.cursor_position.col = self.cursor_position.col.saturating_add(1);
+                self.move_viewbox();
             },
             crossterm::event::KeyCode::Char('i') => self.mode = Mode::Insert,
             crossterm::event::KeyCode::Char(':') => self.mode = Mode::Command,

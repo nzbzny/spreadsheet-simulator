@@ -25,15 +25,17 @@ use ratatui::Frame;
         size.width /= 8;
         size.height /= 8;
 
-        let mut row: u16 = 0;
-        let mut col: u16 = 0; // should start based on viewbox
+        let mut viewbox_row: u16 = 0;
+        let mut viewbox_col: u16 = 0;
+        let mut row = editor.viewbox_anchor.row;
+        let mut col = editor.viewbox_anchor.col;
 
-        while row < 8 {
-            while col < 8 {
+        while viewbox_row < 8 {
+            while viewbox_col < 8 {
                 let text = editor.get_text(col as usize, row as usize);
                 let rect = Rect {
-                    x: size.x + (size.width * col),
-                    y: size.y + (size.height * row),
+                    x: size.x + (size.width * viewbox_col),
+                    y: size.y + (size.height * viewbox_row),
                     width: size.width,
                     height: size.height,
                 };
@@ -55,11 +57,14 @@ use ratatui::Frame;
 
                 frame.render_widget(widget, rect);
 
+                viewbox_col += 1;
                 col += 1;
             }
 
-            col = 0;
+            col -= 8;
             row += 1;
+            viewbox_col = 0;
+            viewbox_row += 1;
         }
     }
 
