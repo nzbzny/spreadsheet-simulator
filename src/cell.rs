@@ -1,4 +1,4 @@
-#[derive(Default, Clone)] // TODO: implement Copy?
+#[derive(Default)] // TODO: implement Copy?
 pub struct Cell {
     text: String,
     cursor_position: usize,
@@ -16,8 +16,8 @@ impl From<char> for Cell {
 impl From<String> for Cell {
     fn from(text: String) -> Self {
         Self {
-            text: text.clone(),
-            cursor_position: text.len()
+            cursor_position: text.len(),
+            text,
         }
     }
 }

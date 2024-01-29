@@ -10,7 +10,7 @@ use std::io::stdout;
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq)]
 pub enum Mode {
     Normal,
     Insert,
@@ -19,7 +19,7 @@ pub enum Mode {
     Delete,
 }
 
-#[derive(Default, Clone)]
+#[derive(Default)]
 pub struct Position {
     pub col: usize,
     pub row: usize,
@@ -210,7 +210,7 @@ impl Editor {
         }
     }
 
-    pub fn get_mode(&self) -> Mode {
-        self.mode.clone()
+    pub fn get_mode(&self) -> &Mode {
+        &self.mode
     }
 }

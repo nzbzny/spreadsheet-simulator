@@ -2,7 +2,7 @@ use crate::Cell;
 
 use std::collections::HashMap;
 
-#[derive(Default, Clone)]
+#[derive(Default)]
 pub struct Row {
     cells: HashMap<usize, Cell>,
     max_col: usize,

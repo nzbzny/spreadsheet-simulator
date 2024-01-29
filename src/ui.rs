@@ -69,7 +69,7 @@ use ratatui::Frame;
     }
 
     fn draw_status_message(frame: &mut Frame, editor: &Editor) {
-        let message = if editor.get_mode() == Mode::Command {
+        let message = if editor.get_mode() == &Mode::Command {
             format!(":{}", &editor.command.to_string())
         } else {
             editor.status_message.text.clone()
