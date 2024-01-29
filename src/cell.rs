@@ -24,15 +24,11 @@ impl From<String> for Cell {
 
 impl Cell {
     pub fn to_str(&self) -> &str {
-        &self.text // maybe add a | at the end to differentiate between cells?
+        &self.text
     }
 
     pub fn to_string(&self) -> &String {
         &self.text
-    }
-
-    pub fn text(&self) -> String {
-        self.text.clone()
     }
 
     pub fn len(&self) -> usize {

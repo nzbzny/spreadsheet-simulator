@@ -204,7 +204,7 @@ impl Editor {
 
     pub fn get_text(&self, col: usize, row: usize) -> String {
         if let Some(cell) = self.document.get_cell(col, row) {
-            cell.text()
+            cell.to_string().clone()
         } else {
             String::new()
         }

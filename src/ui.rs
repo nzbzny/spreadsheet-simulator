@@ -32,7 +32,7 @@ use ratatui::Frame;
 
         while viewbox_row < 8 {
             while viewbox_col < 8 {
-                let text = editor.get_text(col as usize, row as usize);
+                let text = editor.get_text(col as usize, row as usize).clone();
                 let rect = Rect {
                     x: size.x + (size.width * viewbox_col),
                     y: size.y + (size.height * viewbox_row),

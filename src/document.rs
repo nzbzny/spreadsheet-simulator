@@ -107,7 +107,7 @@ impl Document {
             if let Some(row) = self.get_row(row_idx) {
                 for col_idx in 0..row.max_col().saturating_add(1) {
                     if let Some(cell) = self.get_cell(col_idx, row_idx) {
-                        doc_string.push_str(&cell.text());
+                        doc_string.push_str(cell.to_string());
                     }
                     doc_string.push(',');
                 }
