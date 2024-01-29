@@ -28,12 +28,14 @@ pub struct StatusMessage {
     time: Instant,
 }
 
-impl StatusMessage {
+impl From<&str> for StatusMessage {
     fn from(message: &str) -> Self {
-        Self::from_string(String::from(message))
+        Self::from(String::from(message))
     }
+}
 
-    fn from_string(message: String) -> Self {
+impl From<String> for StatusMessage {
+    fn from(message: String) -> Self {
         Self {
             text: message,
             time: Instant::now(),
@@ -53,9 +55,20 @@ pub struct Editor {
 impl Editor {
     pub fn default() -> Self {
         let args: Vec<String> = env::args().collect();
+        let mut initial_status = StatusMessage::from("");
         
         let document = if let Some(filename) = args.get(1) {
-            Document::from(filename.to_string())
+            let doc = Document::from(filename.to_string());
+
+            match doc {
+                Ok(doc) => {
+                    doc
+                },
+                Err(err) => {
+                    initial_status = StatusMessage::from(format!("kind: {}, err: {}", err.kind(), err.to_string()));
+                    Document::default()
+                }
+            }
 
             // TODO: read from file
         } else {
@@ -68,7 +81,7 @@ impl Editor {
             cursor_position: Position::default(),
             document,
             command: Cell::default(),
-            status_message: StatusMessage::from(""),
+            status_message: initial_status,
         }
     }
 
@@ -175,13 +188,15 @@ impl Editor {
                 let result = self.save();
                 
                 match result {
-                    Ok(_) => {},
+                    Ok(_) => {
+                        self.status_message = StatusMessage::from("Success");
+                    },
                     Err(err) => {
                         if err.kind() == std::io::ErrorKind::Other {
                             self.command = Cell::default();
                             return;
                         } else {
-                            self.status_message = StatusMessage::from(&err.to_string());
+                            self.status_message = StatusMessage::from(err.to_string());
                         }
                     }
                 };
@@ -193,7 +208,7 @@ impl Editor {
                 self.document.insert_row(self.cursor_position.row.saturating_add(1))
             }
             _ => {
-                self.status_message = StatusMessage::from_string(
+                self.status_message = StatusMessage::from(
                     format!("Unrecognized command: {}", self.command.to_string())
                 );
             } 
@@ -234,7 +249,7 @@ impl Editor {
                         self.status_message = StatusMessage::from("Success");
                     },
                     Err(err) => {
-                        self.status_message = StatusMessage::from(&err.to_string());
+                        self.status_message = StatusMessage::from(err.to_string());
                     }
                 };
 
@@ -243,7 +258,7 @@ impl Editor {
             _ => {}
         }
         
-        self.status_message = StatusMessage::from_string(format!("Save as: {}", filename));
+        self.status_message = StatusMessage::from(format!("Save as: {}", filename));
         
         if filename != "" {
             self.document.filename = Some(filename);

@@ -32,4 +32,9 @@ impl Row {
     pub fn max_col(&self) -> usize {
         self.max_col
     }
+
+    pub fn init_cell_at(&mut self, col_idx: usize, str: String) {
+        self.cells.insert(col_idx, Cell::from(str)); 
+        self.max_col = col_idx;
+    }
 }

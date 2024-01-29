@@ -13,6 +13,15 @@ impl From<char> for Cell {
     }
 }
 
+impl From<String> for Cell {
+    fn from(text: String) -> Self {
+        Self {
+            text: text.clone(),
+            cursor_position: text.len()
+        }
+    }
+}
+
 impl Cell {
     pub fn to_str(&self) -> &str {
         &self.text // maybe add a | at the end to differentiate between cells?
