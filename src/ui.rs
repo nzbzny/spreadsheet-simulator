@@ -32,7 +32,7 @@ use ratatui::Frame;
 
         while viewbox_row < 8 {
             while viewbox_col < 8 {
-                let text = editor.get_text(col as usize, row as usize).clone();
+                let text = editor.get_text(col, row).clone();
                 let rect = Rect {
                     x: size.x + (size.width * viewbox_col),
                     y: size.y + (size.height * viewbox_row),
@@ -42,8 +42,7 @@ use ratatui::Frame;
 
                 let mut block = Block::new().borders(Borders::ALL);
 
-                if (row as usize) == editor.cursor_position.row
-                    && (col as usize) == editor.cursor_position.col
+                if row == editor.cursor_position.row && col == editor.cursor_position.col
                     {
                         block = block
                             .border_type(ratatui::widgets::BorderType::Thick)
