@@ -41,4 +41,14 @@ impl Row {
     pub fn delete_cell(&mut self, col_idx: usize) {
         self.cells.remove(&col_idx);
     }
+
+    pub fn insert_column(&mut self, at: usize) {
+        for idx in (at..self.max_col.saturating_add(1)).rev() {
+            if let Some(cell) = self.cells.remove(&idx) {
+                self.cells.insert(idx + 1, cell);
+            }
+        }
+
+        self.max_col = self.max_col.saturating_add(1);
+    }
 }

@@ -249,6 +249,12 @@ impl Editor {
             },
             "irb" => {
                 self.document.insert_row(self.cursor_position.row.saturating_add(1));
+            },
+            "icl" => {
+                self.document.insert_column(self.cursor_position.col);
+            },
+            "icr" => {
+                self.document.insert_column(self.cursor_position.col.saturating_add(1));
             }
             _ => {
                 self.status_message = StatusMessage::from(

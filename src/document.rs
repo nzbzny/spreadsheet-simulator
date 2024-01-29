@@ -134,6 +134,12 @@ impl Document {
         self.max_row = self.max_row.saturating_add(1);
     }
 
+    pub fn insert_column(&mut self, at: usize) {
+        for row in self.rows.values_mut() {
+            row.insert_column(at);
+        }
+    }
+
     pub fn delete_cell(&mut self, pos: &Position) {
         if let Some(row) = self.rows.get_mut(&pos.row) {
             row.delete_cell(pos.col);
