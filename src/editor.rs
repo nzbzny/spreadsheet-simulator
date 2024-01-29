@@ -10,7 +10,7 @@ use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 
 #[derive(PartialEq, Clone)]
-pub enum EditorMode {
+pub enum Mode {
     Normal,
     Insert,
     Command,
@@ -44,7 +44,7 @@ impl From<String> for StatusMessage {
 }
 
 pub struct Editor {
-    mode: EditorMode,
+    mode: Mode,
     should_quit: bool,
     pub cursor_position: Position,
     document: Document,
@@ -65,7 +65,7 @@ impl Editor {
                     doc
                 },
                 Err(err) => {
-                    initial_status = StatusMessage::from(format!("kind: {}, err: {}", err.kind(), err.to_string()));
+                    initial_status = StatusMessage::from(format!("kind: {}, err: {}", err.kind(), err));
                     Document::default()
                 }
             }
@@ -76,7 +76,7 @@ impl Editor {
         };
 
         Self {
-            mode: EditorMode::Normal,
+            mode: Mode::Normal,
             should_quit: false,
             cursor_position: Position::default(),
             document,
@@ -90,16 +90,16 @@ impl Editor {
     ) -> Result<(), std::io::Error> {
         let mut terminal = Terminal::new(CrosstermBackend::new(stdout())).unwrap();
         loop {
-            let _ = terminal.draw(|frame| ui::draw(frame, &self));
+            let _ = terminal.draw(|frame| ui::draw(frame, self));
 
             if crossterm::event::poll(std::time::Duration::from_millis(250))? {
                 if let crossterm::event::Event::Key(key) = crossterm::event::read()? {
                     if key.kind == crossterm::event::KeyEventKind::Press {
                         match self.mode {
-                            EditorMode::Insert => self.handle_insert_mode_press(key.code),
-                            EditorMode::Normal => self.handle_normal_mode_press(key.code),
-                            EditorMode::Command => self.handle_command_mode_press(key.code),
-                            EditorMode::SaveAs => self.handle_save_as_mode_press(key.code),
+                            Mode::Insert => self.handle_insert_mode_press(key.code),
+                            Mode::Normal => self.handle_normal_mode_press(key.code),
+                            Mode::Command => self.handle_command_mode_press(key.code),
+                            Mode::SaveAs => self.handle_save_as_mode_press(key.code),
                         }
                     }
                 }
@@ -119,33 +119,32 @@ impl Editor {
 
     fn handle_normal_mode_press(&mut self, key: crossterm::event::KeyCode) {
         match key {
-            crossterm::event::KeyCode::Char('i') => self.mode = EditorMode::Insert,
+            crossterm::event::KeyCode::Char('i') => self.mode = Mode::Insert,
             crossterm::event::KeyCode::Down | crossterm::event::KeyCode::Char('j') => {
-                self.cursor_position.row = self.cursor_position.row.saturating_add(1)
+                self.cursor_position.row = self.cursor_position.row.saturating_add(1);
             }
             crossterm::event::KeyCode::Up | crossterm::event::KeyCode::Char('k') => {
-                self.cursor_position.row = self.cursor_position.row.saturating_sub(1)
+                self.cursor_position.row = self.cursor_position.row.saturating_sub(1);
             }
             crossterm::event::KeyCode::Left | crossterm::event::KeyCode::Char('h') => {
-                self.cursor_position.col = self.cursor_position.col.saturating_sub(1)
+                self.cursor_position.col = self.cursor_position.col.saturating_sub(1);
             }
             crossterm::event::KeyCode::Right | crossterm::event::KeyCode::Char('l') => {
-                self.cursor_position.col = self.cursor_position.col.saturating_add(1)
+                self.cursor_position.col = self.cursor_position.col.saturating_add(1);
             }
             crossterm::event::KeyCode::Char(':') => {
-                self.mode = EditorMode::Command;
+                self.mode = Mode::Command;
             }
-            crossterm::event::KeyCode::Esc => self.mode = EditorMode::Normal,
+            crossterm::event::KeyCode::Esc => self.mode = Mode::Normal,
             _ => {}
         }
     }
 
     fn handle_insert_mode_press(&mut self, key: crossterm::event::KeyCode) {
         match key {
-            crossterm::event::KeyCode::Esc => self.mode = EditorMode::Normal,
+            crossterm::event::KeyCode::Esc => self.mode = Mode::Normal,
             crossterm::event::KeyCode::Char(c) => {
-                self.document
-                    .insert_at(&self.cursor_position, c)
+                self.document.insert_at(&self.cursor_position, c);
             },
             crossterm::event::KeyCode::Left | crossterm::event::KeyCode::Right => {
                 if let Some(cell) = self.document.get_mut_cell(&self.cursor_position) {
@@ -154,7 +153,7 @@ impl Editor {
             },
             crossterm::event::KeyCode::Backspace | crossterm::event::KeyCode::Delete => {
                 if let Some(cell) = self.document.get_mut_cell(&self.cursor_position) {
-                    cell.handle_delete(key)
+                    cell.handle_delete(key);
                 }
             }
             _ => {}
@@ -165,7 +164,7 @@ impl Editor {
         match key {
             crossterm::event::KeyCode::Esc => {
                 self.command = Cell::default();
-                self.mode = EditorMode::Normal;
+                self.mode = Mode::Normal;
             }
             crossterm::event::KeyCode::Char(c) => self.command.insert(c),
             crossterm::event::KeyCode::Enter => self.execute_command(),
@@ -188,16 +187,16 @@ impl Editor {
                 let result = self.save();
                 
                 match result {
-                    Ok(_) => {
+                    Ok(()) => {
                         self.status_message = StatusMessage::from("Success");
                     },
                     Err(err) => {
                         if err.kind() == std::io::ErrorKind::Other {
                             self.command = Cell::default();
                             return;
-                        } else {
-                            self.status_message = StatusMessage::from(err.to_string());
-                        }
+                        } 
+
+                        self.status_message = StatusMessage::from(err.to_string());
                     }
                 };
             }
@@ -205,7 +204,7 @@ impl Editor {
                 self.document.insert_row(self.cursor_position.row);
             },
             "irb" => {
-                self.document.insert_row(self.cursor_position.row.saturating_add(1))
+                self.document.insert_row(self.cursor_position.row.saturating_add(1));
             }
             _ => {
                 self.status_message = StatusMessage::from(
@@ -215,14 +214,14 @@ impl Editor {
         }
 
         self.command = Cell::default();
-        self.mode = EditorMode::Normal;
+        self.mode = Mode::Normal;
     }
 
     fn handle_save_as_mode_press(&mut self, key: crossterm::event::KeyCode) {
         let mut filename = if let Some(filename) = &self.document.filename {
             String::from(filename)
         } else {
-            "".to_string()
+            String::new()
         };
 
         match key {
@@ -236,13 +235,13 @@ impl Editor {
             },
             crossterm::event::KeyCode::Esc => {
                 self.document.filename = None;
-                self.mode = EditorMode::Normal;
+                self.mode = Mode::Normal;
                 self.status_message = StatusMessage::from("Save aborted");
 
                 return;
             },
             crossterm::event::KeyCode::Enter => {
-                self.mode = EditorMode::Normal;
+                self.mode = Mode::Normal;
 
                 match self.save() {
                     Ok(()) => {
@@ -258,16 +257,16 @@ impl Editor {
             _ => {}
         }
         
-        self.status_message = StatusMessage::from(format!("Save as: {}", filename));
+        self.status_message = StatusMessage::from(format!("Save as: {filename}"));
         
-        if filename != "" {
+        if !filename.is_empty() {
             self.document.filename = Some(filename);
         }
     }
 
     fn save(&mut self) -> std::io::Result<()> {
         if self.document.filename.is_none() {
-            self.mode = EditorMode::SaveAs;
+            self.mode = Mode::SaveAs;
             self.status_message = StatusMessage::from("Save as: ");
         }
 
@@ -278,11 +277,11 @@ impl Editor {
         if let Some(cell) = self.document.get_cell(col, row) {
             cell.text()
         } else {
-            "".to_string()
+            String::new()
         }
     }
 
-    pub fn get_mode(&self) -> EditorMode {
+    pub fn get_mode(&self) -> Mode {
         self.mode.clone()
     }
 }

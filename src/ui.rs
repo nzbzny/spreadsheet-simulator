@@ -1,5 +1,5 @@
 use crate::Editor;
-use crate::editor::EditorMode;
+use crate::editor::Mode;
 
 use ratatui::layout::Rect;
 use ratatui::widgets::Block;
@@ -64,7 +64,7 @@ use ratatui::Frame;
     }
 
     fn draw_status_message(frame: &mut Frame, editor: &Editor) {
-        let message = if editor.get_mode() == EditorMode::Command {
+        let message = if editor.get_mode() == Mode::Command {
             format!(":{}", &editor.command.to_string())
         } else {
             editor.status_message.text.clone()
@@ -80,7 +80,7 @@ use ratatui::Frame;
             height: 1,
         };
 
-        frame.render_widget(widget, rect)
+        frame.render_widget(widget, rect);
     }
 
     pub fn draw(frame: &mut Frame, editor: &Editor) {

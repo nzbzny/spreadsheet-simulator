@@ -34,14 +34,14 @@ impl Document {
         let mut max_row: usize = 0;
 
         for (row_idx, line) in contents.split('\n').enumerate() {
-            if line == "" {
+            if line.is_empty() {
                 continue;
             }
 
             let mut current_row = Row::default();
 
             for (col_idx, text) in line.split(',').enumerate() {
-                if text != "" {
+                if !text.is_empty() {
                     current_row.init_cell_at(col_idx, text.to_string());
                 }
             }
@@ -50,11 +50,11 @@ impl Document {
             max_row = row_idx;
         }
 
-        return Ok(Self {
+        Ok(Self {
             rows,
             max_row,
             filename: Some(filename)
-        });
+        })
     }
 
     pub fn get_row(&self, row_idx: usize) -> Option<&Row> {
@@ -101,13 +101,13 @@ impl Document {
             return Err(std::io::Error::new(std::io::ErrorKind::Other, "No filename"));
         }
 
-        let mut doc_string = String::from("");
+        let mut doc_string = String::new();
 
         for row_idx in 0..self.max_row().saturating_add(1) {
             if let Some(row) = self.get_row(row_idx) {
                 for col_idx in 0..row.max_col().saturating_add(1) {
                     if let Some(cell) = self.get_cell(col_idx, row_idx) {
-                        doc_string.push_str(&cell.text())
+                        doc_string.push_str(&cell.text());
                     }
                     doc_string.push(',');
                 }
