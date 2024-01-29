@@ -140,9 +140,9 @@ impl Document {
         }
     }
 
-    pub fn delete_cell(&mut self, pos: &Position) {
+    pub fn clear_cell(&mut self, pos: &Position) {
         if let Some(row) = self.rows.get_mut(&pos.row) {
-            row.delete_cell(pos.col);
+            row.clear_cell(pos.col);
         }
     }
 
@@ -159,5 +159,11 @@ impl Document {
         }
 
         self.max_row = new_max;
+    }
+
+    pub fn delete_column(&mut self, at: usize) {
+        for row in self.rows.values_mut() {
+            row.delete_column(at);
+        }
     }
 }

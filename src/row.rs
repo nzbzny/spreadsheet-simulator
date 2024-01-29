@@ -34,11 +34,11 @@ impl Row {
     }
 
     pub fn init_cell_at(&mut self, col_idx: usize, str: String) {
-        self.cells.insert(col_idx, Cell::from(str)); 
+        self.cells.insert(col_idx, Cell::from(str));
         self.max_col = col_idx;
     }
 
-    pub fn delete_cell(&mut self, col_idx: usize) {
+    pub fn clear_cell(&mut self, col_idx: usize) {
         self.cells.remove(&col_idx);
     }
 
@@ -50,5 +50,19 @@ impl Row {
         }
 
         self.max_col = self.max_col.saturating_add(1);
+    }
+
+    pub fn delete_column(&mut self, at: usize) {
+        self.cells.remove(&at);
+        let mut new_max_col = self.max_col;
+
+        for idx in at.saturating_add(1)..self.max_col.saturating_add(1) {
+            if let Some(cell) = self.cells.remove(&idx) {
+                self.cells.insert(idx - 1, cell);
+                new_max_col = idx - 1;
+            }
+        }
+
+        self.max_col = new_max_col;
     }
 }

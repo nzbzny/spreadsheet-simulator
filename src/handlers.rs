@@ -80,8 +80,9 @@ pub fn handle_command_mode_press(editor: &mut Editor, key: crossterm::event::Key
 
 pub fn handle_delete_mode_press(editor: &mut Editor, key: crossterm::event::KeyCode) {
     match key {
-        crossterm::event::KeyCode::Char(' ') => editor.document.delete_cell(&editor.cursor_position),
+        crossterm::event::KeyCode::Char(' ') => editor.document.clear_cell(&editor.cursor_position),
         crossterm::event::KeyCode::Char('r') => editor.document.delete_row(editor.cursor_position.row),
+        crossterm::event::KeyCode::Char('c') => editor.document.delete_column(editor.cursor_position.col),
         crossterm::event::KeyCode::Esc => editor.mode = Mode::Normal,
         _ => editor.status_message = StatusMessage::from("Unrecognized command"),
     }
