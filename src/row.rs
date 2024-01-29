@@ -37,4 +37,8 @@ impl Row {
         self.cells.insert(col_idx, Cell::from(str)); 
         self.max_col = col_idx;
     }
+
+    pub fn delete_cell(&mut self, col_idx: usize) {
+        self.cells.remove(&col_idx);
+    }
 }

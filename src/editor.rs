@@ -15,6 +15,7 @@ pub enum Mode {
     Insert,
     Command,
     SaveAs,
+    Delete,
 }
 
 #[derive(Default, Clone)]
@@ -43,6 +44,12 @@ impl From<String> for StatusMessage {
     }
 }
 
+impl StatusMessage {
+    pub fn empty() -> Self {
+        StatusMessage::from("")
+    }
+}
+
 pub struct Editor {
     mode: Mode,
     should_quit: bool,
@@ -55,7 +62,7 @@ pub struct Editor {
 impl Editor {
     pub fn default() -> Self {
         let args: Vec<String> = env::args().collect();
-        let mut initial_status = StatusMessage::from("");
+        let mut initial_status = StatusMessage::empty();
         
         let document = if let Some(filename) = args.get(1) {
             let doc = Document::from(filename.to_string());
@@ -65,12 +72,10 @@ impl Editor {
                     doc
                 },
                 Err(err) => {
-                    initial_status = StatusMessage::from(format!("kind: {}, err: {}", err.kind(), err));
+                    initial_status = StatusMessage::from(err.to_string());
                     Document::default()
                 }
             }
-
-            // TODO: read from file
         } else {
             Document::default()
         };
@@ -100,6 +105,7 @@ impl Editor {
                             Mode::Normal => self.handle_normal_mode_press(key.code),
                             Mode::Command => self.handle_command_mode_press(key.code),
                             Mode::SaveAs => self.handle_save_as_mode_press(key.code),
+                            Mode::Delete => self.handle_delete_mode_press(key.code),
                         }
                     }
                 }
@@ -109,7 +115,7 @@ impl Editor {
                 }
 
                 if self.status_message.time.elapsed() > Duration::new(5, 0) {
-                    self.status_message = StatusMessage::from("");
+                    self.status_message = StatusMessage::empty();
                 }
             }
         }
@@ -119,22 +125,32 @@ impl Editor {
 
     fn handle_normal_mode_press(&mut self, key: crossterm::event::KeyCode) {
         match key {
-            crossterm::event::KeyCode::Char('i') => self.mode = Mode::Insert,
             crossterm::event::KeyCode::Down | crossterm::event::KeyCode::Char('j') => {
                 self.cursor_position.row = self.cursor_position.row.saturating_add(1);
-            }
+            },
             crossterm::event::KeyCode::Up | crossterm::event::KeyCode::Char('k') => {
                 self.cursor_position.row = self.cursor_position.row.saturating_sub(1);
-            }
+            },
             crossterm::event::KeyCode::Left | crossterm::event::KeyCode::Char('h') => {
                 self.cursor_position.col = self.cursor_position.col.saturating_sub(1);
-            }
+            },
             crossterm::event::KeyCode::Right | crossterm::event::KeyCode::Char('l') => {
                 self.cursor_position.col = self.cursor_position.col.saturating_add(1);
-            }
-            crossterm::event::KeyCode::Char(':') => {
-                self.mode = Mode::Command;
-            }
+            },
+            crossterm::event::KeyCode::Char('i') => self.mode = Mode::Insert,
+            crossterm::event::KeyCode::Char(':') => self.mode = Mode::Command,
+            crossterm::event::KeyCode::Char('d') => self.mode = Mode::Delete,
+            crossterm::event::KeyCode::Char('o') => {
+                self.command = Cell::from("irb".to_string());
+                self.execute_command();
+                self.handle_normal_mode_press(crossterm::event::KeyCode::Char('j'));
+                self.mode = Mode::Insert;
+            },
+            crossterm::event::KeyCode::Char('O') => {
+                self.command = Cell::from("ira".to_string());
+                self.execute_command();
+                self.mode = Mode::Insert;
+            },
             crossterm::event::KeyCode::Esc => self.mode = Mode::Normal,
             _ => {}
         }
@@ -214,6 +230,17 @@ impl Editor {
         }
 
         self.command = Cell::default();
+        self.mode = Mode::Normal;
+    }
+
+    fn handle_delete_mode_press(&mut self, key: crossterm::event::KeyCode) {
+        match key {
+            crossterm::event::KeyCode::Char(' ') => self.document.delete_cell(&self.cursor_position),
+            crossterm::event::KeyCode::Char('r') => self.document.delete_row(self.cursor_position.row),
+            crossterm::event::KeyCode::Esc => self.mode = Mode::Normal,
+            _ => self.status_message = StatusMessage::from("Unrecognized command"),
+        }
+
         self.mode = Mode::Normal;
     }
 

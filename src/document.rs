@@ -125,12 +125,33 @@ impl Document {
 
     pub fn insert_row(&mut self, at: usize) {
         for row_idx in (at..self.max_row.saturating_add(1)).rev() {
-            if let Some(row) = self.rows.get(&row_idx) {
-                self.rows.insert(row_idx + 1, row.clone());
+            if let Some(row) = self.rows.remove(&row_idx) {
+                self.rows.insert(row_idx.saturating_add(1), row);
             }
         }
 
         self.rows.insert(at, Row::default());
         self.max_row = self.max_row.saturating_add(1);
+    }
+
+    pub fn delete_cell(&mut self, pos: &Position) {
+        if let Some(row) = self.rows.get_mut(&pos.row) {
+            row.delete_cell(pos.col);
+        }
+    }
+
+    pub fn delete_row(&mut self, row: usize) {
+        self.rows.remove(&row);
+
+        let mut new_max = self.max_row;
+
+        for row_idx in row..self.max_row.saturating_add(1) {
+            if let Some(row) = self.rows.remove(&row_idx) {
+                self.rows.insert(row_idx.saturating_sub(1), row);
+                new_max = row_idx;
+            }
+        }
+
+        self.max_row = new_max;
     }
 }
