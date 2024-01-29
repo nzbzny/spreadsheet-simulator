@@ -186,6 +186,12 @@ impl Editor {
                     }
                 };
             }
+            "ira" => {
+                self.document.insert_row(self.cursor_position.row);
+            },
+            "irb" => {
+                self.document.insert_row(self.cursor_position.row.saturating_add(1))
+            }
             _ => {
                 self.status_message = StatusMessage::from_string(
                     format!("Unrecognized command: {}", self.command.to_string())

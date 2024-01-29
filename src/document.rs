@@ -87,4 +87,15 @@ impl Document {
 
         Ok(())
     }
+
+    pub fn insert_row(&mut self, at: usize) {
+        for row_idx in (at..self.max_row.saturating_add(1)).rev() {
+            if let Some(row) = self.rows.get(&row_idx) {
+                self.rows.insert(row_idx + 1, row.clone());
+            }
+        }
+
+        self.rows.insert(at, Row::default());
+        self.max_row = self.max_row.saturating_add(1);
+    }
 }
