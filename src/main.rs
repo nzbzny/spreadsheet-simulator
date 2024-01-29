@@ -3,6 +3,7 @@
 mod cell;
 mod document;
 mod editor;
+mod handlers;
 mod row;
 mod ui;
 
