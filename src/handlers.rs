@@ -1,5 +1,5 @@
 use crate::cell::Cell;
-use crate::editor::{Editor, StatusMessage};
+use crate::editor::{Editor, StatusMessage, SearchMode};
 use crate::editor::Mode;
 
 
@@ -35,6 +35,7 @@ pub fn handle_normal_mode_press(editor: &mut Editor, key: crossterm::event::KeyC
             editor.execute_command();
             editor.mode = Mode::Insert;
         },
+        crossterm::event::KeyCode::Char('/') => editor.mode = Mode::Search,
         crossterm::event::KeyCode::Esc => editor.mode = Mode::Normal,
         _ => {}
     }
@@ -66,7 +67,11 @@ pub fn handle_command_mode_press(editor: &mut Editor, key: crossterm::event::Key
             editor.command = Cell::default();
             editor.mode = Mode::Normal;
         }
-        crossterm::event::KeyCode::Char(c) => editor.command.insert(c),
+        crossterm::event::KeyCode::Char(c) => {
+            if !c.is_control() {
+                editor.command.insert(c);
+            }
+        }
         crossterm::event::KeyCode::Enter => editor.execute_command(),
         crossterm::event::KeyCode::Left | crossterm::event::KeyCode::Right => {
             editor.command.move_cursor(key);
@@ -134,5 +139,28 @@ pub fn handle_save_as_mode_press(editor: &mut Editor, key: crossterm::event::Key
 
     if !filename.is_empty() {
         editor.document.filename = Some(filename);
+    }
+}
+
+pub fn handle_search_mode_press(editor: &mut Editor, key: crossterm::event::KeyCode) {
+    match key {
+        crossterm::event::KeyCode::Esc => {
+            editor.search_text = Cell::default();
+            editor.mode = Mode::Normal;
+            editor.search_mode = SearchMode::None;
+        }
+        crossterm::event::KeyCode::Char(c) => {
+            if !c.is_control() {
+                editor.search_text.insert(c);
+            }
+        }
+        crossterm::event::KeyCode::Enter => editor.search(),
+        crossterm::event::KeyCode::Left | crossterm::event::KeyCode::Right => {
+            editor.search_text.move_cursor(key);
+        },
+        crossterm::event::KeyCode::Delete | crossterm::event::KeyCode::Backspace => {
+            editor.search_text.handle_delete(key);
+        },
+        _ => {}
     }
 }

@@ -17,6 +17,15 @@ pub enum Mode {
     Command,
     SaveAs,
     Delete,
+    Search,
+}
+
+#[derive(PartialEq)]
+pub enum SearchMode {
+    None,
+    Row,
+    Column,
+    Global
 }
 
 #[derive(Default)]
@@ -51,6 +60,9 @@ impl StatusMessage {
     }
 }
 
+// TODO: search_text and command are `Cell` to take advantage of how `Cell` already handles
+// backspace and delete - this should be moved into its own thing, because it doesn't particularly
+// make sense for search_text and command to be `Cell`
 pub struct Editor {
     pub mode: Mode,
     should_quit: bool,
@@ -59,6 +71,8 @@ pub struct Editor {
     pub command: Cell,
     pub status_message: StatusMessage,
     pub viewbox_anchor: Position,
+    pub search_text: Cell, 
+    pub search_mode: SearchMode,
 }
 
 impl Editor {
@@ -90,6 +104,8 @@ impl Editor {
             command: Cell::default(),
             status_message: initial_status,
             viewbox_anchor: Position::default(),
+            search_text: Cell::default(),
+            search_mode: SearchMode::None,
         }
     }
 
@@ -109,6 +125,7 @@ impl Editor {
                             Mode::Command => handlers::handle_command_mode_press(self, key.code),
                             Mode::SaveAs => handlers::handle_save_as_mode_press(self, key.code),
                             Mode::Delete => handlers::handle_delete_mode_press(self, key.code),
+                            Mode::Search => handlers::handle_search_mode_press(self, key.code),
                         }
                     }
                 }
@@ -191,6 +208,38 @@ impl Editor {
 
         self.command = Cell::default();
         self.mode = Mode::Normal;
+    }
+
+    pub fn search(&mut self) {
+        let search_text = self.search_text.to_string();
+
+        // search text must be at least <search_term>/[r|c|g]
+        if search_text.len() < 3 {
+            self.status_message = StatusMessage::from(format!("Could not parse search: {}", search_text));
+            self.search_mode = SearchMode::None;
+            self.search_text = Cell::default();
+            
+            return;
+        }
+
+        let search_type: String = search_text.chars().skip(search_text.len() - 2).collect();
+
+        match search_type.as_str() {
+            "/r" => self.search_mode = SearchMode::Row,
+            "/c" => self.search_mode = SearchMode::Column,
+            "/g" => self.search_mode = SearchMode::Global,
+            _ => {
+                self.search_mode = SearchMode::None;
+                self.status_message = StatusMessage::from(
+                    format!("Unidentified search mode: {} - must be one of `/r`, `/c`, `/g`", search_type)
+                );
+
+                return;
+            }
+        }
+
+        let search_term: String = search_text.chars().take(search_text.len() - 2).collect();
+        self.search_text = Cell::from(search_term);
     }
 
     pub fn save(&mut self) -> std::io::Result<()> {
