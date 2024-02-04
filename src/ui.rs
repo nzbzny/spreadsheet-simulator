@@ -98,7 +98,7 @@ fn draw_status_message(frame: &mut Frame, editor: &Editor) {
     frame.render_widget(widget, rect);
 }
 
-fn should_highlight_cell(editor: &Editor, text: &String, col: usize, row: usize) -> bool {
+fn should_highlight_cell(editor: &Editor, text: &str, col: usize, row: usize) -> bool {
     if editor.search_mode == SearchMode::None || editor.search_mode == SearchMode::Error {
         return false;
     }
@@ -115,7 +115,7 @@ fn should_highlight_cell(editor: &Editor, text: &String, col: usize, row: usize)
         return true;
     }
 
-    return false;
+    false
 }
 
 pub fn draw(frame: &mut Frame, editor: &Editor) {

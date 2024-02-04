@@ -217,7 +217,7 @@ impl Editor {
         // search text must be at least <search_term>/[r|c|g]
         if search_text.len() < 3 {
             self.search_mode = SearchMode::Error;
-            self.status_message = StatusMessage::from(format!("Could not parse search: {}", search_text));
+            self.status_message = StatusMessage::from(format!("Could not parse search: {search_text}"));
             
             return;
         }
@@ -231,7 +231,7 @@ impl Editor {
             _ => {
                 self.search_mode = SearchMode::Error;
                 self.status_message = StatusMessage::from(
-                    format!("Unidentified search mode: {} - must be one of `/r`, `/c`, `/g`", search_type)
+                    format!("Unidentified search mode: {search_type} - must be one of `/r`, `/c`, `/g`")
                 );
 
                 return;

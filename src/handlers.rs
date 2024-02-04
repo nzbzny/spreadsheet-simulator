@@ -4,10 +4,9 @@ use crate::editor::Mode;
 
 pub fn handle_normal_mode_press(editor: &mut Editor, key: crossterm::event::KeyCode) {
     match key {
-        crossterm::event::KeyCode::Down | crossterm::event::KeyCode::Char('j') |
-        crossterm::event::KeyCode::Up | crossterm::event::KeyCode::Char('k') |
-        crossterm::event::KeyCode::Left | crossterm::event::KeyCode::Char('h') |
-        crossterm::event::KeyCode::Right | crossterm::event::KeyCode::Char('l') => 
+        crossterm::event::KeyCode::Down | crossterm::event::KeyCode::Up | 
+        crossterm::event::KeyCode::Left | crossterm::event::KeyCode::Right |
+        crossterm::event::KeyCode::Char('j' | 'k' | 'h' | 'l') => 
         {
             editor.move_cursor(key);
         },
@@ -143,8 +142,10 @@ pub fn handle_search_mode_press(editor: &mut Editor, key: crossterm::event::KeyC
             editor.search();
         }
         crossterm::event::KeyCode::Delete | crossterm::event::KeyCode::Backspace => {
-            editor.search_text.handle_delete(key);
-            editor.search_mode = SearchMode::None;
+            if editor.search_mode == SearchMode::None || editor.search_mode == SearchMode::Error {
+                editor.search_text.handle_delete(key);
+                editor.search_mode = SearchMode::None;
+            }
         },
         crossterm::event::KeyCode::Down | crossterm::event::KeyCode::Up | 
         crossterm::event::KeyCode::Left | crossterm::event::KeyCode::Right => 
@@ -162,6 +163,7 @@ pub fn handle_search_mode_press(editor: &mut Editor, key: crossterm::event::KeyC
                     editor.search_mode = SearchMode::None;
                 }
 
+                return;
             }
 
             if !c.is_control() {
