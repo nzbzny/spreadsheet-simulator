@@ -2,24 +2,14 @@ use crate::cell::Cell;
 use crate::editor::{Editor, StatusMessage, SearchMode};
 use crate::editor::Mode;
 
-
 pub fn handle_normal_mode_press(editor: &mut Editor, key: crossterm::event::KeyCode) {
     match key {
-        crossterm::event::KeyCode::Down | crossterm::event::KeyCode::Char('j') => {
-            editor.cursor_position.row = editor.cursor_position.row.saturating_add(1);
-            editor.move_viewbox();
-        },
-        crossterm::event::KeyCode::Up | crossterm::event::KeyCode::Char('k') => {
-            editor.cursor_position.row = editor.cursor_position.row.saturating_sub(1);
-            editor.move_viewbox();
-        },
-        crossterm::event::KeyCode::Left | crossterm::event::KeyCode::Char('h') => {
-            editor.cursor_position.col = editor.cursor_position.col.saturating_sub(1);
-            editor.move_viewbox();
-        },
-        crossterm::event::KeyCode::Right | crossterm::event::KeyCode::Char('l') => {
-            editor.cursor_position.col = editor.cursor_position.col.saturating_add(1);
-            editor.move_viewbox();
+        crossterm::event::KeyCode::Down | crossterm::event::KeyCode::Char('j') |
+        crossterm::event::KeyCode::Up | crossterm::event::KeyCode::Char('k') |
+        crossterm::event::KeyCode::Left | crossterm::event::KeyCode::Char('h') |
+        crossterm::event::KeyCode::Right | crossterm::event::KeyCode::Char('l') => 
+        {
+            editor.move_cursor(key);
         },
         crossterm::event::KeyCode::Char('i') => editor.mode = Mode::Insert,
         crossterm::event::KeyCode::Char(':') => editor.mode = Mode::Command,
@@ -149,18 +139,37 @@ pub fn handle_search_mode_press(editor: &mut Editor, key: crossterm::event::KeyC
             editor.mode = Mode::Normal;
             editor.search_mode = SearchMode::None;
         }
-        crossterm::event::KeyCode::Char(c) => {
-            if !c.is_control() {
-                editor.search_text.insert(c);
-            }
+        crossterm::event::KeyCode::Enter => {
+            editor.search();
         }
-        crossterm::event::KeyCode::Enter => editor.search(),
-        crossterm::event::KeyCode::Left | crossterm::event::KeyCode::Right => {
-            editor.search_text.move_cursor(key);
-        },
         crossterm::event::KeyCode::Delete | crossterm::event::KeyCode::Backspace => {
             editor.search_text.handle_delete(key);
+            editor.search_mode = SearchMode::None;
+        },
+        crossterm::event::KeyCode::Down | crossterm::event::KeyCode::Up | 
+        crossterm::event::KeyCode::Left | crossterm::event::KeyCode::Right => 
+        {
+            editor.move_cursor(key);
+        },
+        crossterm::event::KeyCode::Char(c) => {
+            if editor.search_mode != SearchMode::None && editor.search_mode != SearchMode::Error {
+                if editor.search_mode != SearchMode::None && (c == 'j' || c == 'k' || c == 'h' || c == 'l') {
+                    editor.move_cursor(key);
+                }
+
+                if c == '/' {
+                    editor.search_text = Cell::default();
+                    editor.search_mode = SearchMode::None;
+                }
+
+            }
+
+            if !c.is_control() {
+                editor.search_text.insert(c);
+                editor.search_mode = SearchMode::None;
+            }
         },
         _ => {}
     }
+
 }

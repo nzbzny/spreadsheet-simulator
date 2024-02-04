@@ -25,7 +25,8 @@ pub enum SearchMode {
     None,
     Row,
     Column,
-    Global
+    Global,
+    Error,
 }
 
 #[derive(Default)]
@@ -215,9 +216,8 @@ impl Editor {
 
         // search text must be at least <search_term>/[r|c|g]
         if search_text.len() < 3 {
+            self.search_mode = SearchMode::Error;
             self.status_message = StatusMessage::from(format!("Could not parse search: {}", search_text));
-            self.search_mode = SearchMode::None;
-            self.search_text = Cell::default();
             
             return;
         }
@@ -229,7 +229,7 @@ impl Editor {
             "/c" => self.search_mode = SearchMode::Column,
             "/g" => self.search_mode = SearchMode::Global,
             _ => {
-                self.search_mode = SearchMode::None;
+                self.search_mode = SearchMode::Error;
                 self.status_message = StatusMessage::from(
                     format!("Unidentified search mode: {} - must be one of `/r`, `/c`, `/g`", search_type)
                 );
@@ -261,5 +261,25 @@ impl Editor {
 
     pub fn get_mode(&self) -> &Mode {
         &self.mode
+    }
+
+    pub fn move_cursor(&mut self, key: crossterm::event::KeyCode) {
+        match key {
+            crossterm::event::KeyCode::Down | crossterm::event::KeyCode::Char('j') => {
+                self.cursor_position.row = self.cursor_position.row.saturating_add(1);
+            },
+            crossterm::event::KeyCode::Up | crossterm::event::KeyCode::Char('k') => {
+                self.cursor_position.row = self.cursor_position.row.saturating_sub(1);
+            },
+            crossterm::event::KeyCode::Left | crossterm::event::KeyCode::Char('h') => {
+                self.cursor_position.col = self.cursor_position.col.saturating_sub(1);
+            },
+            crossterm::event::KeyCode::Right | crossterm::event::KeyCode::Char('l') => {
+                self.cursor_position.col = self.cursor_position.col.saturating_add(1);
+            },
+            _ => return
+        }
+
+        self.move_viewbox();
     }
 }
