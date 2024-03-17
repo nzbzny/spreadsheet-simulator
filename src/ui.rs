@@ -111,6 +111,7 @@ fn draw_spreadsheet(frame: &mut Frame, editor: &Editor) {
             let border_set = if viewbox_col == 0 {
                 ratatui::symbols::border::PLAIN
             } else {
+                // TODO: https://ratatui.rs/how-to/layout/collapse-borders/ 
                 ratatui::symbols::border::Set {
                     top_right: ratatui::symbols::line::NORMAL.horizontal,
                     bottom_right: ratatui::symbols::line::NORMAL.horizontal_up,
