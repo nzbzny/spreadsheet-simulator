@@ -3,6 +3,7 @@ use crate::constants;
 use crate::editor::Mode;
 use crate::editor::SearchMode;
 
+use crossterm::style::Stylize;
 use ratatui::layout::Rect;
 use ratatui::Frame;
 use ratatui::style::Style;
@@ -10,6 +11,8 @@ use ratatui::style::Modifier;
 use ratatui::widgets::Block;
 use ratatui::widgets::Borders;
 use ratatui::widgets::Paragraph;
+
+use ratatui::widgets::Table;
 
     /*
     pub struct Rect {
@@ -120,7 +123,36 @@ fn should_highlight_cell(editor: &Editor, text: &str, col: usize, row: usize) ->
     false
 }
 
+fn draw_table(frame: &mut Frame, editor: &Editor) {
+    let mut rows: Vec<ratatui::widgets::Row> = vec![];
+    for row_idx in 0..8 {
+        let mut row_vec: Vec<String> = vec![];
+        for col_idx in 0..8 { 
+            row_vec.push(editor.view(col_idx, row_idx));
+        }
+
+        rows.push(ratatui::widgets::Row::new(row_vec));
+    }
+
+
+    let widths = [
+        ratatui::prelude::Constraint::Length(constants::CELL_VIEW_LEN.try_into().unwrap()),
+        ratatui::prelude::Constraint::Length(constants::CELL_VIEW_LEN.try_into().unwrap()),
+        ratatui::prelude::Constraint::Length(constants::CELL_VIEW_LEN.try_into().unwrap()),
+        ratatui::prelude::Constraint::Length(constants::CELL_VIEW_LEN.try_into().unwrap()),
+        ratatui::prelude::Constraint::Length(constants::CELL_VIEW_LEN.try_into().unwrap()),
+        ratatui::prelude::Constraint::Length(constants::CELL_VIEW_LEN.try_into().unwrap()),
+        ratatui::prelude::Constraint::Length(constants::CELL_VIEW_LEN.try_into().unwrap()),
+        ratatui::prelude::Constraint::Length(constants::CELL_VIEW_LEN.try_into().unwrap()),
+    ];
+
+    let size = frame.size();
+    let table = ratatui::widgets::Table::default().rows(rows).widths(widths).column_spacing(1);
+    frame.render_widget(table, size);
+}
+
 pub fn draw(frame: &mut Frame, editor: &Editor) {
-    draw_spreadsheet(frame, editor);
+    draw_table(frame, editor);
+//    draw_spreadsheet(frame, editor);
     draw_status_message(frame, editor);
 }
