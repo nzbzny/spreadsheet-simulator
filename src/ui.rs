@@ -1,4 +1,5 @@
 use crate::Editor;
+use crate::constants;
 use crate::editor::Mode;
 use crate::editor::SearchMode;
 
@@ -25,17 +26,18 @@ use ratatui::widgets::Paragraph;
 
 fn draw_spreadsheet(frame: &mut Frame, editor: &Editor) {
     let mut size = frame.size();
-    size.width /= 8;
-    size.height /= 8;
+    size.width /= constants::SHEET_VIEWBOX_WIDTH;
+    size.height /= constants::SHEET_VIEWBOX_HEIGHT;
 
     let mut viewbox_row: u16 = 0;
     let mut viewbox_col: u16 = 0;
     let mut row = editor.viewbox_anchor.row;
     let mut col = editor.viewbox_anchor.col;
 
-    while viewbox_row < 8 {
-        while viewbox_col < 8 {
-            let text = editor.get_text(col, row).clone();
+    while viewbox_row < constants::SHEET_VIEWBOX_HEIGHT {
+        while viewbox_col < constants::SHEET_VIEWBOX_WIDTH {
+            let text = editor.view(col, row);
+            
             let rect = Rect {
                 x: size.x + (size.width * viewbox_col),
                 y: size.y + (size.height * viewbox_row),
@@ -69,7 +71,7 @@ fn draw_spreadsheet(frame: &mut Frame, editor: &Editor) {
             col += 1;
         }
 
-        col -= 8;
+        col -= usize::from(constants::SHEET_VIEWBOX_WIDTH);
         row += 1;
         viewbox_col = 0;
         viewbox_row += 1;
@@ -111,7 +113,7 @@ fn should_highlight_cell(editor: &Editor, text: &str, col: usize, row: usize) ->
         return false;
     }
 
-    if text.contains(editor.search_text.to_str()) {
+    if text.contains(editor.search_text.to_string()) {
         return true;
     }
 

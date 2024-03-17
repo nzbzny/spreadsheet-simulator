@@ -1,10 +1,11 @@
 use crate::Cell;
+use crate::constants;
 use crate::document::Document;
 use crate::handlers;
 use crate::ui;
 
 use std::env;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use std::io::stdout;
 
 use ratatui::backend::CrosstermBackend;
@@ -117,7 +118,7 @@ impl Editor {
         loop {
             let _ = terminal.draw(|frame| ui::draw(frame, self));
 
-            if crossterm::event::poll(std::time::Duration::from_millis(250))? {
+            if crossterm::event::poll(std::time::Duration::from_millis(constants::POLL_TIME))? {
                 if let crossterm::event::Event::Key(key) = crossterm::event::read()? {
                     if key.kind == crossterm::event::KeyEventKind::Press {
                         match self.mode {
@@ -135,7 +136,7 @@ impl Editor {
                     break;
                 }
 
-                if self.status_message.time.elapsed() > Duration::new(5, 0) {
+                if self.status_message.time.elapsed() > constants::STATUS_MESSAGE_ELAPSE_TIME {
                     self.status_message = StatusMessage::empty();
                 }
             }
@@ -153,16 +154,12 @@ impl Editor {
             self.viewbox_anchor.col = self.cursor_position.col;
         }
 
-        // TODO: unhardcode this
-        let viewbox_height = 8;
-        let viewbox_width = 8;
-
-        if self.viewbox_anchor.row.saturating_add(viewbox_height) <= self.cursor_position.row { // move viewbox down
-            self.viewbox_anchor.row = self.cursor_position.row.saturating_sub(viewbox_height - 1);
+        if self.viewbox_anchor.row.saturating_add(usize::from(constants::SHEET_VIEWBOX_HEIGHT)) <= self.cursor_position.row { // move viewbox down
+            self.viewbox_anchor.row = self.cursor_position.row.saturating_sub(usize::from(constants::SHEET_VIEWBOX_HEIGHT) - 1);
         }
 
-        if self.viewbox_anchor.col.saturating_add(viewbox_height) <= self.cursor_position.col { // move viewbox right
-            self.viewbox_anchor.col = self.cursor_position.col.saturating_sub(viewbox_width - 1);
+        if self.viewbox_anchor.col.saturating_add(usize::from(constants::SHEET_VIEWBOX_WIDTH)) <= self.cursor_position.col { // move viewbox right
+            self.viewbox_anchor.col = self.cursor_position.col.saturating_sub(usize::from(constants::SHEET_VIEWBOX_WIDTH) - 1);
         }
     }
 
@@ -251,9 +248,9 @@ impl Editor {
         self.document.save()
     }
 
-    pub fn get_text(&self, col: usize, row: usize) -> String {
+    pub fn view(&self, col: usize, row: usize) -> String {
         if let Some(cell) = self.document.get_cell(col, row) {
-            cell.to_string().clone()
+            cell.view()
         } else {
             String::new()
         }

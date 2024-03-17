@@ -1,6 +1,7 @@
 #![warn(clippy::all, clippy::pedantic)]
 
 mod cell;
+mod constants;
 mod document;
 mod editor;
 mod handlers;
