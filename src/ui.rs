@@ -1,4 +1,3 @@
-use std::hash::Hash;
 use std::rc::Rc;
 
 use crate::Editor;
@@ -13,7 +12,6 @@ use ratatui::layout::Rect;
 use ratatui::Frame;
 use ratatui::style::Style;
 use ratatui::style::Modifier;
-use ratatui::symbols;
 use ratatui::widgets::Block;
 use ratatui::widgets::Borders;
 use ratatui::widgets::Paragraph;
@@ -67,6 +65,61 @@ fn create_layouts(frame: &Frame) -> Vec<Rc<[Rect]>> {
     return sub_layouts;
 }
 
+fn generate_border_set(viewbox_row: u16, viewbox_col: u16, thick: bool) -> ratatui::symbols::border::Set {
+            let default_thickness = if thick {
+                ratatui::symbols::line::THICK
+            } else {
+                ratatui::symbols::line::NORMAL
+            };
+
+            let top_left = if viewbox_col == 0 && viewbox_row == 0 {
+                ratatui::symbols::line::TOP_LEFT
+            } else if viewbox_col == 0 {
+                default_thickness.vertical_right
+            } else if viewbox_row == constants::SHEET_VIEWBOX_WIDTH - 1 {
+                ratatui::symbols::line::BOTTOM_RIGHT
+            } else {
+                default_thickness.horizontal
+            };
+
+            let top_right = if viewbox_col != constants::SHEET_VIEWBOX_WIDTH -1 && viewbox_row != 0 {
+                ratatui::symbols::line::CROSS
+            } else if viewbox_col != constants::SHEET_VIEWBOX_WIDTH - 1 {
+                default_thickness.horizontal_down
+            } else if viewbox_row != 0 {
+                default_thickness.vertical_left
+            } else {
+                ratatui::symbols::line::TOP_RIGHT
+            };
+
+            let bottom_right = if viewbox_col != constants::SHEET_VIEWBOX_WIDTH - 1 {
+                default_thickness.horizontal_up
+            } else {
+                ratatui::symbols::line::BOTTOM_RIGHT
+            };
+
+            let default_border = if thick {
+                ratatui::symbols::border::THICK
+            } else {
+                ratatui::symbols::border::PLAIN
+            };
+
+            // TODO: if the current cell is _next to_ a thick cell, the adjacent borders need to be
+            // highlighted
+            return ratatui::symbols::border::Set {
+                top_right, 
+                top_left,
+                bottom_right,
+                // vertical_right
+                // bottom_left
+                // vertical_left
+                // vertical_right
+                // horizontal_top
+                // horizontal_bottom
+                ..default_border
+            };
+}
+
 fn draw_spreadsheet(frame: &mut Frame, editor: &Editor) {
     let mut size = frame.size();
     size.width /= constants::SHEET_VIEWBOX_WIDTH;
@@ -83,8 +136,8 @@ fn draw_spreadsheet(frame: &mut Frame, editor: &Editor) {
         while viewbox_col < constants::SHEET_VIEWBOX_WIDTH {
             let text = editor.view(col, row);
 
-            let should_highlight = should_highlight_cell(editor, &text, col, row);
             let current_cell = (row == editor.cursor_position.row) && (col == editor.cursor_position.col);
+            let should_highlight = should_highlight_cell(editor, &text, col, row);
 
             // TODO: the row and the column with the selected cell should have all 4 borders
             // can do this by comparing the current row/col with the selected cell's row/col,
@@ -119,47 +172,7 @@ fn draw_spreadsheet(frame: &mut Frame, editor: &Editor) {
                 borders |= Borders::TOP | Borders::BOTTOM
             }
 
-            // only affects first column
-            let top_left = if viewbox_col == 0 {
-                if viewbox_row == 0 {
-                    ratatui::symbols::line::TOP_LEFT
-                } else {
-                    ratatui::symbols::line::NORMAL.vertical_right
-                }
-            } else {
-                if viewbox_row == constants::SHEET_VIEWBOX_WIDTH - 1 {
-                    ratatui::symbols::line::BOTTOM_RIGHT
-                } else {
-                    ratatui::symbols::line::NORMAL.horizontal
-                }
-            };
-            
-            let top_right = if viewbox_col != constants::SHEET_VIEWBOX_WIDTH - 1 {
-                if viewbox_row != 0 {
-                    ratatui::symbols::line::CROSS
-                } else {
-                    ratatui::symbols::line::NORMAL.horizontal_down
-                }
-            } else {
-                if viewbox_row != 0 {
-                    ratatui::symbols::line::NORMAL.vertical_left
-                } else {
-                    ratatui::symbols::line::TOP_RIGHT
-                }
-            };
-            
-            let bottom_right = if viewbox_col != constants::SHEET_VIEWBOX_WIDTH - 1 {
-                ratatui::symbols::line::NORMAL.horizontal_up
-            } else {
-                ratatui::symbols::line::BOTTOM_RIGHT
-            };
-
-            let border_set = ratatui::symbols::border::Set {
-                top_right, 
-                top_left,
-                bottom_right,
-                ..ratatui::symbols::border::PLAIN
-            };
+            let border_set = generate_border_set(viewbox_row, viewbox_col, should_highlight || current_cell);
 
             let block = Block::new().border_set(border_set).borders(borders).border_style(border_style);
 
@@ -220,64 +233,7 @@ fn should_highlight_cell(editor: &Editor, text: &str, col: usize, row: usize) ->
     false
 }
 
-fn draw_spreadsheet2(frame: &mut Frame, editor: &Editor) {
-    let mut size = frame.size();
-    size.width /= constants::SHEET_VIEWBOX_WIDTH;
-    size.height /= constants::SHEET_VIEWBOX_HEIGHT;
-
-    let layout = Layout::default().direction(Direction::Horizontal).constraints([
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-    ]).split(frame.size());
-
-    let mut sub_layouts: Vec<Rc<[Rect]>> = vec![];
-
-    for i in 0..10 {
-        sub_layouts.push(Layout::default().direction(Direction::Vertical).constraints([
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-        ]).split(layout[i]))
-    }
-
-    let border_type = ratatui::widgets::BorderType::Plain;
-
-    let border_style = Style::new().fg(ratatui::style::Color::White);
-
-            let borders1 = Borders::LEFT | Borders::TOP | Borders::BOTTOM;
-            let border_set1 = ratatui::symbols::border::PLAIN;
-            let block1 = Block::new().border_set(border_set1).borders(borders1).border_type(border_type).border_style(border_style);
-            let widget1 = Paragraph::new("block1").block(block1);
-
-            let borders2 = Borders::LEFT | Borders::RIGHT | Borders::TOP | Borders::BOTTOM;
-            let border_set2 = ratatui::symbols::border::Set {
-                top_left: ratatui::symbols::line::NORMAL.horizontal_down,
-                ..ratatui::symbols::border::PLAIN
-            };
-            let block2 = Block::new().border_set(border_set2).borders(borders2).border_style(border_style);
-            let widget2 = Paragraph::new("block2").block(block2);
-
-            frame.render_widget(widget1, sub_layouts[0][0]);
-            frame.render_widget(widget2, sub_layouts[1][0]);
-}
-
 pub fn draw(frame: &mut Frame, editor: &Editor) {
     draw_spreadsheet(frame, editor);
-//    draw_spreadsheet2(frame, editor);
     draw_status_message(frame, editor);
 }
