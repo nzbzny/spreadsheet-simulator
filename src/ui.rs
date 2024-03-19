@@ -32,32 +32,34 @@ use ratatui::widgets::Paragraph;
 
 fn create_layouts(frame: &Frame) -> Vec<Rc<[Rect]>> {
     let layout = Layout::default().direction(Direction::Horizontal).constraints([
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
+            Constraint::Percentage(11),
+            Constraint::Percentage(11),
+            Constraint::Percentage(11),
+            Constraint::Percentage(11),
+            Constraint::Percentage(11),
+            Constraint::Percentage(11),
+            Constraint::Percentage(11),
+            Constraint::Percentage(11),
+            Constraint::Percentage(11),
     ]).split(frame.size());
 
     let mut sub_layouts: Vec<Rc<[Rect]>> = vec![];
 
-    for i in 0..10 {
+    for i in 0..layout.len() {
         sub_layouts.push(Layout::default().direction(Direction::Vertical).constraints([
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
+            Constraint::Percentage(8),
+            Constraint::Percentage(8),
+            Constraint::Percentage(8),
+            Constraint::Percentage(8),
+            Constraint::Percentage(8),
+            Constraint::Percentage(8),
+            Constraint::Percentage(8),
+            Constraint::Percentage(8),
+            Constraint::Percentage(8),
+            Constraint::Percentage(8),
+            Constraint::Percentage(8),
+            Constraint::Percentage(8),
+            Constraint::Percentage(4),
         ]).split(layout[i]))
     }
 
@@ -119,7 +121,7 @@ fn draw_spreadsheet(frame: &mut Frame, editor: &Editor) {
             // only affects first column
             let top_left = if viewbox_col == 0 {
                 if viewbox_row == 0 {
-                    ratatui::symbols::line::NORMAL.horizontal_down
+                    ratatui::symbols::line::TOP_LEFT
                 } else {
                     ratatui::symbols::line::NORMAL.vertical_right
                 }
@@ -157,7 +159,7 @@ fn draw_spreadsheet(frame: &mut Frame, editor: &Editor) {
 
             let widget = Paragraph::new(text).block(block);
 
-            frame.render_widget(widget, layouts[col][row]);
+            frame.render_widget(widget, layouts[usize::from(viewbox_col)][usize::from(viewbox_row)]);
 
             viewbox_col += 1;
             col += 1;
