@@ -1,3 +1,4 @@
+use std::hash::Hash;
 use std::rc::Rc;
 
 use crate::Editor;
@@ -126,33 +127,38 @@ fn draw_spreadsheet(frame: &mut Frame, editor: &Editor) {
                     ratatui::symbols::line::NORMAL.vertical_right
                 }
             } else {
-                ratatui::symbols::line::NORMAL.horizontal
+                if viewbox_row == constants::SHEET_VIEWBOX_WIDTH - 1 {
+                    ratatui::symbols::line::BOTTOM_RIGHT
+                } else {
+                    ratatui::symbols::line::NORMAL.horizontal
+                }
             };
             
-            let top_right = if viewbox_col != constants::SHEET_VIEWBOX_WIDTH {
+            let top_right = if viewbox_col != constants::SHEET_VIEWBOX_WIDTH - 1 {
                 if viewbox_row != 0 {
                     ratatui::symbols::line::CROSS
                 } else {
                     ratatui::symbols::line::NORMAL.horizontal_down
                 }
             } else {
-//                if viewbox_row != 0 {
-                    ratatui::symbols::line::THICK_CROSS
-//                } else {
-//                    ratatui::symbols::line::NORMAL.horizontal
-//                }
+                if viewbox_row != 0 {
+                    ratatui::symbols::line::NORMAL.vertical_left
+                } else {
+                    ratatui::symbols::line::TOP_RIGHT
+                }
+            };
+            
+            let bottom_right = if viewbox_col != constants::SHEET_VIEWBOX_WIDTH - 1 {
+                ratatui::symbols::line::NORMAL.horizontal_up
+            } else {
+                ratatui::symbols::line::BOTTOM_RIGHT
             };
 
-            let border_set = if viewbox_col == constants::SHEET_VIEWBOX_WIDTH - 1 {
-                ratatui::symbols::border::PLAIN
-            } else {
-                // TODO: https://ratatui.rs/how-to/layout/collapse-borders/ 
-                ratatui::symbols::border::Set {
-                    top_right, 
-                    top_left,
-                    bottom_right: ratatui::symbols::line::NORMAL.horizontal_up,
-                    ..ratatui::symbols::border::PLAIN
-                }
+            let border_set = ratatui::symbols::border::Set {
+                top_right, 
+                top_left,
+                bottom_right,
+                ..ratatui::symbols::border::PLAIN
             };
 
             let block = Block::new().border_set(border_set).borders(borders).border_style(border_style);
