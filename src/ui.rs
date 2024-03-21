@@ -1,13 +1,19 @@
+use std::rc::Rc;
+
 use crate::Editor;
 use crate::constants;
 use crate::editor::Mode;
 use crate::editor::SearchMode;
 
+use ratatui::layout::Constraint;
+use ratatui::layout::Direction;
+use ratatui::layout::Layout;
 use ratatui::layout::Rect;
 use ratatui::Frame;
 use ratatui::style::Style;
 use ratatui::style::Modifier;
 use ratatui::widgets::Block;
+use ratatui::widgets::BorderType;
 use ratatui::widgets::Borders;
 use ratatui::widgets::Paragraph;
 
@@ -24,6 +30,43 @@ use ratatui::widgets::Paragraph;
     }
     */
 
+fn create_layouts(frame: &Frame) -> Vec<Rc<[Rect]>> {
+    let layout = Layout::default().direction(Direction::Horizontal).constraints([
+            Constraint::Ratio(1, 10),
+            Constraint::Ratio(1, 10),
+            Constraint::Ratio(1, 10),
+            Constraint::Ratio(1, 10),
+            Constraint::Ratio(1, 10),
+            Constraint::Ratio(1, 10),
+            Constraint::Ratio(1, 10),
+            Constraint::Ratio(1, 10),
+            Constraint::Ratio(1, 10),
+            Constraint::Ratio(1, 10),
+    ]).split(frame.size());
+
+    let mut sub_layouts: Vec<Rc<[Rect]>> = vec![];
+
+    for i in 0..layout.len() {
+        sub_layouts.push(Layout::default().direction(Direction::Vertical).constraints([
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::default(),
+        ]).split(layout[i]))
+    }
+
+    return sub_layouts;
+}
+
 fn draw_spreadsheet(frame: &mut Frame, editor: &Editor) {
     let mut size = frame.size();
     size.width /= constants::SHEET_VIEWBOX_WIDTH;
@@ -34,38 +77,37 @@ fn draw_spreadsheet(frame: &mut Frame, editor: &Editor) {
     let mut row = editor.viewbox_anchor.row;
     let mut col = editor.viewbox_anchor.col;
 
+    let layouts = create_layouts(frame);
+
     while viewbox_row < constants::SHEET_VIEWBOX_HEIGHT {
         while viewbox_col < constants::SHEET_VIEWBOX_WIDTH {
             let text = editor.view(col, row);
-            
-            let rect = Rect {
-                x: size.x + (size.width * viewbox_col),
-                y: size.y + (size.height * viewbox_row),
-                width: size.width,
-                height: size.height,
-            };
 
-            let should_highlight = should_highlight_cell(editor, &text, col, row);
             let current_cell = (row == editor.cursor_position.row) && (col == editor.cursor_position.col);
-
-            let border_type = if should_highlight || current_cell {
-                ratatui::widgets::BorderType::Thick
-            } else {
-                ratatui::widgets::BorderType::Plain
-            };
+            let should_highlight = should_highlight_cell(editor, &text, col, row);
 
             let border_style = Style::new()
                 .add_modifier(
                     if should_highlight || current_cell { Modifier::BOLD } else { Modifier::empty() }
                 ).fg(
-                    if should_highlight { ratatui::style::Color::Blue } else { ratatui::style::Color::White }
+                    if should_highlight || current_cell { 
+                        ratatui::style::Color::Rgb(220, 220, 220)
+                    } else {
+                        ratatui::style::Color::Rgb(100, 100, 100)
+                    }
                 );
 
-            let block = Block::new().borders(Borders::ALL).border_type(border_type).border_style(border_style);
+            let border_type = if should_highlight || current_cell {
+                BorderType::Thick
+            } else {
+                BorderType::Plain
+            };
+
+            let block = Block::new().borders(Borders::ALL).border_style(border_style).border_type(border_type);
 
             let widget = Paragraph::new(text).block(block);
 
-            frame.render_widget(widget, rect);
+            frame.render_widget(widget, layouts[usize::from(viewbox_col)][usize::from(viewbox_row)]);
 
             viewbox_col += 1;
             col += 1;
