@@ -15,6 +15,7 @@ use ratatui::style::Style;
 use ratatui::style::Modifier;
 use ratatui::symbols;
 use ratatui::widgets::Block;
+use ratatui::widgets::BorderType;
 use ratatui::widgets::Borders;
 use ratatui::widgets::Paragraph;
 
@@ -100,10 +101,16 @@ fn draw_spreadsheet(frame: &mut Frame, editor: &Editor) {
                 .add_modifier(
                     if should_highlight || current_cell { Modifier::BOLD } else { Modifier::empty() }
                 ).fg(
-                    if should_highlight || current_cell { ratatui::style::Color::Rgb(220, 220, 220) } else { ratatui::style::Color::Rgb(160, 160, 160) }
+                    ratatui::style::Color::White
                 );
 
-            let block = Block::new().borders(Borders::ALL).border_style(border_style).border_set(symbols::border::QUADRANT_OUTSIDE);
+            let border_type = if should_highlight || current_cell {
+                BorderType::Thick
+            } else {
+                BorderType::Plain
+            };
+
+            let block = Block::new().borders(Borders::ALL).border_style(border_style).border_type(border_type);
 
             let widget = Paragraph::new(text).block(block);
 
