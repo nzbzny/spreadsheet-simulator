@@ -50,18 +50,18 @@ fn create_layouts(frame: &Frame) -> Vec<Rc<[Rect]>> {
 
     for i in 0..layout.len() {
         sub_layouts.push(Layout::default().direction(Direction::Vertical).constraints([
-            Constraint::Ratio(2, 25),
-            Constraint::Ratio(2, 25),
-            Constraint::Ratio(2, 25),
-            Constraint::Ratio(2, 25),
-            Constraint::Ratio(2, 25),
-            Constraint::Ratio(2, 25),
-            Constraint::Ratio(2, 25),
-            Constraint::Ratio(2, 25),
-            Constraint::Ratio(2, 25),
-            Constraint::Ratio(2, 25),
-            Constraint::Ratio(2, 25),
-            Constraint::Ratio(2, 25),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
             Constraint::default(),
         ]).split(layout[i]))
     }
@@ -101,7 +101,11 @@ fn draw_spreadsheet(frame: &mut Frame, editor: &Editor) {
                 .add_modifier(
                     if should_highlight || current_cell { Modifier::BOLD } else { Modifier::empty() }
                 ).fg(
-                    ratatui::style::Color::White
+                    if should_highlight || current_cell { 
+                        ratatui::style::Color::Rgb(220, 220, 220)
+                    } else {
+                        ratatui::style::Color::Rgb(100, 100, 100)
+                    }
                 );
 
             let border_type = if should_highlight || current_cell {
