@@ -3,7 +3,6 @@ use std::rc::Rc;
 use crate::Editor;
 use crate::constants;
 use crate::editor::Mode;
-use crate::editor::Position;
 use crate::editor::SearchMode;
 
 use ratatui::layout::Constraint;
@@ -13,7 +12,6 @@ use ratatui::layout::Rect;
 use ratatui::Frame;
 use ratatui::style::Style;
 use ratatui::style::Modifier;
-use ratatui::symbols;
 use ratatui::widgets::Block;
 use ratatui::widgets::BorderType;
 use ratatui::widgets::Borders;
@@ -87,15 +85,6 @@ fn draw_spreadsheet(frame: &mut Frame, editor: &Editor) {
 
             let current_cell = (row == editor.cursor_position.row) && (col == editor.cursor_position.col);
             let should_highlight = should_highlight_cell(editor, &text, col, row);
-
-            // TODO: the row and the column with the selected cell should have all 4 borders
-            // can do this by comparing the current row/col with the selected cell's row/col,
-            // if curr_row < selected_row then only do top border, if curr_row > selected_row only
-            // do bottom border, if curr_row == selected_row do both. 
-            // Similarly, if curr_col < selected_col then only do left border, 
-            // if curr_col > selected_col then only do right border, and if curr_col ==
-            // selected_col do both borders. this will let you still make the currently selected
-            // cell have thickness
 
             let border_style = Style::new()
                 .add_modifier(
