@@ -100,7 +100,7 @@ fn draw_spreadsheet(frame: &mut Frame, editor: &Editor) {
                 .add_modifier(
                     if should_highlight || current_cell { Modifier::BOLD } else { Modifier::empty() }
                 ).fg(
-                    if should_highlight || current_cell { ratatui::style::Color::Rgb(220, 220, 220) } else { ratatui::style::Color::Rgb(160, 160, 160) }
+                    if should_highlight || current_cell { ratatui::style::Color::Rgb(220, 220, 220) } else { ratatui::style::Color::Rgb(100, 100, 100) }
                 );
 
             let block = Block::new().borders(Borders::ALL).border_style(border_style).border_set(symbols::border::QUADRANT_OUTSIDE);
