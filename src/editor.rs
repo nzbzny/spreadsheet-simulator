@@ -1,12 +1,12 @@
-use crate::Cell;
 use crate::constants;
 use crate::document::Document;
 use crate::handlers;
 use crate::ui;
+use crate::Cell;
 
 use std::env;
-use std::time::Instant;
 use std::io::stdout;
+use std::time::Instant;
 
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
@@ -73,7 +73,7 @@ pub struct Editor {
     pub command: Cell,
     pub status_message: StatusMessage,
     pub viewbox_anchor: Position,
-    pub search_text: Cell, 
+    pub search_text: Cell,
     pub search_mode: SearchMode,
 }
 
@@ -81,14 +81,12 @@ impl Editor {
     pub fn default() -> Self {
         let args: Vec<String> = env::args().collect();
         let mut initial_status = StatusMessage::empty();
-        
+
         let document = if let Some(filename) = args.get(1) {
             let doc = Document::from(filename.to_string());
 
             match doc {
-                Ok(doc) => {
-                    doc
-                },
+                Ok(doc) => doc,
                 Err(err) => {
                     initial_status = StatusMessage::from(err.to_string());
                     Document::default()
@@ -111,9 +109,7 @@ impl Editor {
         }
     }
 
-    pub fn run(
-        &mut self,
-    ) -> Result<(), std::io::Error> {
+    pub fn run(&mut self) -> Result<(), std::io::Error> {
         let mut terminal = Terminal::new(CrosstermBackend::new(stdout())).unwrap();
         loop {
             let _ = terminal.draw(|frame| ui::draw(frame, self));
@@ -146,20 +142,40 @@ impl Editor {
     }
 
     pub fn move_viewbox(&mut self) {
-        if self.cursor_position.row < self.viewbox_anchor.row { // move viewbox up
+        if self.cursor_position.row < self.viewbox_anchor.row {
+            // move viewbox up
             self.viewbox_anchor.row = self.cursor_position.row;
         }
 
-        if self.cursor_position.col < self.viewbox_anchor.col { // move viewbox left
+        if self.cursor_position.col < self.viewbox_anchor.col {
+            // move viewbox left
             self.viewbox_anchor.col = self.cursor_position.col;
         }
 
-        if self.viewbox_anchor.row.saturating_add(usize::from(constants::SHEET_VIEWBOX_HEIGHT)) <= self.cursor_position.row { // move viewbox down
-            self.viewbox_anchor.row = self.cursor_position.row.saturating_sub(usize::from(constants::SHEET_VIEWBOX_HEIGHT) - 1);
+        if self
+            .viewbox_anchor
+            .row
+            .saturating_add(usize::from(constants::SHEET_VIEWBOX_HEIGHT))
+            <= self.cursor_position.row
+        {
+            // move viewbox down
+            self.viewbox_anchor.row = self
+                .cursor_position
+                .row
+                .saturating_sub(usize::from(constants::SHEET_VIEWBOX_HEIGHT) - 1);
         }
 
-        if self.viewbox_anchor.col.saturating_add(usize::from(constants::SHEET_VIEWBOX_WIDTH)) <= self.cursor_position.col { // move viewbox right
-            self.viewbox_anchor.col = self.cursor_position.col.saturating_sub(usize::from(constants::SHEET_VIEWBOX_WIDTH) - 1);
+        if self
+            .viewbox_anchor
+            .col
+            .saturating_add(usize::from(constants::SHEET_VIEWBOX_WIDTH))
+            <= self.cursor_position.col
+        {
+            // move viewbox right
+            self.viewbox_anchor.col = self
+                .cursor_position
+                .col
+                .saturating_sub(usize::from(constants::SHEET_VIEWBOX_WIDTH) - 1);
         }
     }
 
@@ -170,16 +186,16 @@ impl Editor {
             }
             "w" => {
                 let result = self.save();
-                
+
                 match result {
                     Ok(()) => {
                         self.status_message = StatusMessage::from("Success");
-                    },
+                    }
                     Err(err) => {
                         if err.kind() == std::io::ErrorKind::Other {
                             self.command = Cell::default();
                             return;
-                        } 
+                        }
 
                         self.status_message = StatusMessage::from(err.to_string());
                     }
@@ -187,21 +203,24 @@ impl Editor {
             }
             "ira" => {
                 self.document.insert_row(self.cursor_position.row);
-            },
+            }
             "irb" => {
-                self.document.insert_row(self.cursor_position.row.saturating_add(1));
-            },
+                self.document
+                    .insert_row(self.cursor_position.row.saturating_add(1));
+            }
             "icl" => {
                 self.document.insert_column(self.cursor_position.col);
-            },
+            }
             "icr" => {
-                self.document.insert_column(self.cursor_position.col.saturating_add(1));
+                self.document
+                    .insert_column(self.cursor_position.col.saturating_add(1));
             }
             _ => {
-                self.status_message = StatusMessage::from(
-                    format!("Unrecognized command: {}", self.command.to_string())
-                );
-            } 
+                self.status_message = StatusMessage::from(format!(
+                    "Unrecognized command: {}",
+                    self.command.to_string()
+                ));
+            }
         }
 
         self.command = Cell::default();
@@ -214,8 +233,9 @@ impl Editor {
         // search text must be at least <search_term>/[r|c|g]
         if search_text.len() < 3 {
             self.search_mode = SearchMode::Error;
-            self.status_message = StatusMessage::from(format!("Could not parse search: {search_text}"));
-            
+            self.status_message =
+                StatusMessage::from(format!("Could not parse search: {search_text}"));
+
             return;
         }
 
@@ -227,9 +247,9 @@ impl Editor {
             "/g" => self.search_mode = SearchMode::Global,
             _ => {
                 self.search_mode = SearchMode::Error;
-                self.status_message = StatusMessage::from(
-                    format!("Unidentified search mode: {search_type} - must be one of `/r`, `/c`, `/g`")
-                );
+                self.status_message = StatusMessage::from(format!(
+                    "Unidentified search mode: {search_type} - must be one of `/r`, `/c`, `/g`"
+                ));
 
                 return;
             }
@@ -264,17 +284,17 @@ impl Editor {
         match key {
             crossterm::event::KeyCode::Down | crossterm::event::KeyCode::Char('j') => {
                 self.cursor_position.row = self.cursor_position.row.saturating_add(1);
-            },
+            }
             crossterm::event::KeyCode::Up | crossterm::event::KeyCode::Char('k') => {
                 self.cursor_position.row = self.cursor_position.row.saturating_sub(1);
-            },
+            }
             crossterm::event::KeyCode::Left | crossterm::event::KeyCode::Char('h') => {
                 self.cursor_position.col = self.cursor_position.col.saturating_sub(1);
-            },
+            }
             crossterm::event::KeyCode::Right | crossterm::event::KeyCode::Char('l') => {
                 self.cursor_position.col = self.cursor_position.col.saturating_add(1);
-            },
-            _ => return
+            }
+            _ => return,
         }
 
         self.move_viewbox();

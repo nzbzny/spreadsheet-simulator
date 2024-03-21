@@ -1,37 +1,39 @@
 use std::rc::Rc;
 
-use crate::Editor;
 use crate::constants;
 use crate::editor::Mode;
 use crate::editor::SearchMode;
+use crate::Editor;
 
 use ratatui::layout::Constraint;
 use ratatui::layout::Direction;
 use ratatui::layout::Layout;
 use ratatui::layout::Rect;
-use ratatui::Frame;
-use ratatui::style::Style;
 use ratatui::style::Modifier;
+use ratatui::style::Style;
 use ratatui::widgets::Block;
 use ratatui::widgets::BorderType;
 use ratatui::widgets::Borders;
 use ratatui::widgets::Paragraph;
+use ratatui::Frame;
 
-    /*
-    pub struct Rect {
-        /// The x coordinate of the top left corner of the rect.
-        pub x: u16,
-        /// The y coordinate of the top left corner of the rect.
-        pub y: u16,
-        /// The width of the rect.
-        pub width: u16,
-        /// The height of the rect.
-        pub height: u16,
-    }
-    */
+/*
+pub struct Rect {
+    /// The x coordinate of the top left corner of the rect.
+    pub x: u16,
+    /// The y coordinate of the top left corner of the rect.
+    pub y: u16,
+    /// The width of the rect.
+    pub width: u16,
+    /// The height of the rect.
+    pub height: u16,
+}
+*/
 
 fn create_layouts(frame: &Frame) -> Vec<Rc<[Rect]>> {
-    let layout = Layout::default().direction(Direction::Horizontal).constraints([
+    let layout = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
             Constraint::Ratio(1, 10),
             Constraint::Ratio(1, 10),
             Constraint::Ratio(1, 10),
@@ -42,26 +44,32 @@ fn create_layouts(frame: &Frame) -> Vec<Rc<[Rect]>> {
             Constraint::Ratio(1, 10),
             Constraint::Ratio(1, 10),
             Constraint::Ratio(1, 10),
-    ]).split(frame.size());
+        ])
+        .split(frame.size());
 
     let mut sub_layouts: Vec<Rc<[Rect]>> = vec![];
 
     for i in 0..layout.len() {
-        sub_layouts.push(Layout::default().direction(Direction::Vertical).constraints([
-            Constraint::Length(4),
-            Constraint::Length(4),
-            Constraint::Length(4),
-            Constraint::Length(4),
-            Constraint::Length(4),
-            Constraint::Length(4),
-            Constraint::Length(4),
-            Constraint::Length(4),
-            Constraint::Length(4),
-            Constraint::Length(4),
-            Constraint::Length(4),
-            Constraint::Length(4),
-            Constraint::default(),
-        ]).split(layout[i]));
+        sub_layouts.push(
+            Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([
+                    Constraint::Length(4),
+                    Constraint::Length(4),
+                    Constraint::Length(4),
+                    Constraint::Length(4),
+                    Constraint::Length(4),
+                    Constraint::Length(4),
+                    Constraint::Length(4),
+                    Constraint::Length(4),
+                    Constraint::Length(4),
+                    Constraint::Length(4),
+                    Constraint::Length(4),
+                    Constraint::Length(4),
+                    Constraint::default(),
+                ])
+                .split(layout[i]),
+        );
     }
 
     sub_layouts
@@ -83,19 +91,21 @@ fn draw_spreadsheet(frame: &mut Frame, editor: &Editor) {
         while viewbox_col < constants::SHEET_VIEWBOX_WIDTH {
             let text = editor.view(col, row);
 
-            let current_cell = (row == editor.cursor_position.row) && (col == editor.cursor_position.col);
+            let current_cell =
+                (row == editor.cursor_position.row) && (col == editor.cursor_position.col);
             let should_highlight = should_highlight_cell(editor, &text, col, row);
 
             let border_style = Style::new()
-                .add_modifier(
-                    if should_highlight || current_cell { Modifier::BOLD } else { Modifier::empty() }
-                ).fg(
-                    if should_highlight || current_cell { 
-                        ratatui::style::Color::Rgb(220, 220, 220)
-                    } else {
-                        ratatui::style::Color::Rgb(100, 100, 100)
-                    }
-                );
+                .add_modifier(if should_highlight || current_cell {
+                    Modifier::BOLD
+                } else {
+                    Modifier::empty()
+                })
+                .fg(if should_highlight || current_cell {
+                    ratatui::style::Color::Rgb(220, 220, 220)
+                } else {
+                    ratatui::style::Color::Rgb(100, 100, 100)
+                });
 
             let border_type = if should_highlight || current_cell {
                 BorderType::Thick
@@ -103,11 +113,17 @@ fn draw_spreadsheet(frame: &mut Frame, editor: &Editor) {
                 BorderType::Plain
             };
 
-            let block = Block::new().borders(Borders::ALL).border_style(border_style).border_type(border_type);
+            let block = Block::new()
+                .borders(Borders::ALL)
+                .border_style(border_style)
+                .border_type(border_type);
 
             let widget = Paragraph::new(text).block(block);
 
-            frame.render_widget(widget, layouts[usize::from(viewbox_col)][usize::from(viewbox_row)]);
+            frame.render_widget(
+                widget,
+                layouts[usize::from(viewbox_col)][usize::from(viewbox_row)],
+            );
 
             viewbox_col += 1;
             col += 1;
@@ -128,7 +144,7 @@ fn draw_status_message(frame: &mut Frame, editor: &Editor) {
     } else {
         editor.status_message.text.clone()
     };
-    
+
     let widget = Paragraph::new(message.clone());
 
     let size = frame.size();

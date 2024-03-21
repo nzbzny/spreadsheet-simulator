@@ -8,4 +8,3 @@ pub const SHEET_VIEWBOX_WIDTH: u16 = 10;
 // Times
 pub const POLL_TIME: u64 = 250;
 pub const STATUS_MESSAGE_ELAPSE_TIME: std::time::Duration = Duration::new(5, 0);
-

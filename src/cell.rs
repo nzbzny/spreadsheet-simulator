@@ -22,7 +22,7 @@ impl From<String> for Cell {
         Self {
             cursor_position: text.len(),
             text,
-            view_start: 0
+            view_start: 0,
         }
     }
 }
@@ -62,7 +62,7 @@ impl Cell {
                 if self.cursor_position < self.view_start {
                     self.view_start = self.view_start.saturating_sub(1);
                 }
-            },
+            }
             crossterm::event::KeyCode::Right => {
                 if self.cursor_position < self.len() {
                     self.cursor_position = self.cursor_position.saturating_add(1);
@@ -71,8 +71,7 @@ impl Cell {
                         self.view_start = self.view_start.saturating_add(1);
                     }
                 }
-
-            },
+            }
             _ => {}
         }
     }
@@ -83,13 +82,13 @@ impl Cell {
                 if self.cursor_position < self.len() {
                     self.text.remove(self.cursor_position);
                 }
-            },
+            }
             crossterm::event::KeyCode::Backspace => {
                 if self.cursor_position > 0 {
                     self.text.remove(self.cursor_position - 1);
                     self.cursor_position = self.cursor_position.saturating_sub(1);
                 }
-            },
+            }
             _ => {}
         }
     }

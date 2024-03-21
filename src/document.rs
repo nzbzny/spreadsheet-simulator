@@ -1,9 +1,9 @@
-use crate::Cell;
 use crate::editor::Position;
+use crate::Cell;
 use crate::Row;
 
 use std::collections::HashMap;
-use std::fs::{File, self};
+use std::fs::{self, File};
 use std::io::Write;
 
 #[derive(Default)]
@@ -22,7 +22,7 @@ impl Document {
                 return Ok(Self {
                     rows: HashMap::new(),
                     max_row: 0,
-                    filename: Some(filename)
+                    filename: Some(filename),
                 });
             }
 
@@ -53,7 +53,7 @@ impl Document {
         Ok(Self {
             rows,
             max_row,
-            filename: Some(filename)
+            filename: Some(filename),
         })
     }
 
@@ -88,7 +88,7 @@ impl Document {
         if let Some(row) = self.rows.get_mut(&position.row) {
             return row.get_mut(position.col);
         }
-        
+
         None
     }
 
@@ -98,7 +98,10 @@ impl Document {
 
     pub fn save(&mut self) -> std::io::Result<()> {
         if self.filename.is_none() {
-            return Err(std::io::Error::new(std::io::ErrorKind::Other, "No filename"));
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "No filename",
+            ));
         }
 
         let mut doc_string = String::new();
