@@ -49,18 +49,18 @@ fn create_layouts(frame: &Frame) -> Vec<Rc<[Rect]>> {
 
     for i in 0..layout.len() {
         sub_layouts.push(Layout::default().direction(Direction::Vertical).constraints([
-            Constraint::Ratio(2, 25),
-            Constraint::Ratio(2, 25),
-            Constraint::Ratio(2, 25),
-            Constraint::Ratio(2, 25),
-            Constraint::Ratio(2, 25),
-            Constraint::Ratio(2, 25),
-            Constraint::Ratio(2, 25),
-            Constraint::Ratio(2, 25),
-            Constraint::Ratio(2, 25),
-            Constraint::Ratio(2, 25),
-            Constraint::Ratio(2, 25),
-            Constraint::Ratio(2, 25),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(4),
             Constraint::default(),
         ]).split(layout[i]))
     }
