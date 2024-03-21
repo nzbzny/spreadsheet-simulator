@@ -61,10 +61,10 @@ fn create_layouts(frame: &Frame) -> Vec<Rc<[Rect]>> {
             Constraint::Length(4),
             Constraint::Length(4),
             Constraint::default(),
-        ]).split(layout[i]))
+        ]).split(layout[i]));
     }
 
-    return sub_layouts;
+    sub_layouts
 }
 
 fn draw_spreadsheet(frame: &mut Frame, editor: &Editor) {
