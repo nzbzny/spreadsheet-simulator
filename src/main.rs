@@ -5,6 +5,7 @@ mod constants;
 mod document;
 mod editor;
 mod handlers;
+mod parser;
 mod row;
 mod ui;
 

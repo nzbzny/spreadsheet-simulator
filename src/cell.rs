@@ -1,10 +1,12 @@
 use crate::constants;
+use crate::parser;
 
 #[derive(Default)] // TODO: implement Copy?
 pub struct Cell {
     text: String,
     cursor_position: usize,
     view_start: usize,
+    display_text: String,
 }
 
 impl From<char> for Cell {
@@ -13,6 +15,7 @@ impl From<char> for Cell {
             text: String::from(c),
             cursor_position: 1, // cell starts with 1 char
             view_start: 0,
+            display_text: String::default(),
         }
     }
 }
@@ -23,26 +26,41 @@ impl From<String> for Cell {
             cursor_position: text.len(),
             text,
             view_start: 0,
+            display_text: String::default(),
         }
     }
 }
 
 impl Cell {
     pub fn to_str(&self) -> &str {
-        &self.text
+        if self.display_text.len() > 0 {
+            &self.display_text
+        } else {
+            &self.text
+        }
     }
 
     pub fn to_string(&self) -> &String {
-        &self.text
+        if self.display_text.len() > 0 {
+            &self.display_text
+        } else {
+            &self.text
+        }
     }
 
     pub fn view(&self) -> String {
+        let text = if self.display_text.len() > 0 {
+            &self.display_text
+        } else {
+            &self.text
+        };
+
         let mut end = self.view_start.saturating_add(constants::CELL_VIEW_LEN);
-        if end > self.text.len() {
-            end = self.text.len();
+        if end > text.len() {
+            end = text.len();
         }
 
-        self.text.get(self.view_start..end).unwrap().to_string()
+        text.get(self.view_start..end).unwrap().to_string()
     }
 
     pub fn len(&self) -> usize {
@@ -91,5 +109,15 @@ impl Cell {
             }
             _ => {}
         }
+    }
+
+    pub fn evaluate_cell(&mut self) {
+        if self.text.starts_with("=") {
+            self.display_text = parser::parse(self.text.as_bytes());
+        }
+    }
+
+    pub fn clear_display_text(&mut self) {
+        self.display_text = "".to_string()
     }
 }

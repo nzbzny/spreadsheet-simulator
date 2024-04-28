@@ -119,7 +119,7 @@ impl Editor {
                     if key.kind == crossterm::event::KeyEventKind::Press {
                         match self.mode {
                             Mode::Insert => handlers::handle_insert_mode_press(self, key.code),
-                            Mode::Normal => handlers::handle_normal_mode_press(self, key.code),
+                            Mode::Normal => handlers::handle_normal_mode_press(self, key.code, key.modifiers),
                             Mode::Command => handlers::handle_command_mode_press(self, key.code),
                             Mode::SaveAs => handlers::handle_save_as_mode_press(self, key.code),
                             Mode::Delete => handlers::handle_delete_mode_press(self, key.code),

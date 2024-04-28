@@ -2,22 +2,44 @@ use crate::cell::Cell;
 use crate::editor::Mode;
 use crate::editor::{Editor, SearchMode, StatusMessage};
 
-pub fn handle_normal_mode_press(editor: &mut Editor, key: crossterm::event::KeyCode) {
+pub fn handle_normal_mode_press(editor: &mut Editor, key: crossterm::event::KeyCode, mods: crossterm::event::KeyModifiers) {
     match key {
+        crossterm::event::KeyCode::Left
+        | crossterm::event::KeyCode::Right
+        | crossterm::event::KeyCode::Char('h' | 'l') => {
+            // TODO: use ctrl+(left|right|h|l) to move the cursor of the display text
+            // debating if i actually want to do it this way, or if i want to introduce a new mode
+            // for moving the display text cursor. kind of prefer this way given that it's an
+            // explicit distinction of behavior, because display text is _not_ editable by users
+            if mods.contains(crossterm::event::KeyModifiers::CONTROL) {
+                if let Some(cell) = editor.document.get_mut_cell(&editor.cursor_position) {
+                    cell.move_cursor(key);
+                } else {
+                    editor.move_cursor(key);
+                }
+            } else {
+                editor.move_cursor(key);
+            }
+        }
+
         crossterm::event::KeyCode::Down
         | crossterm::event::KeyCode::Up
-        | crossterm::event::KeyCode::Left
-        | crossterm::event::KeyCode::Right
-        | crossterm::event::KeyCode::Char('j' | 'k' | 'h' | 'l') => {
+        | crossterm::event::KeyCode::Char('j' | 'k') => {
             editor.move_cursor(key);
         }
-        crossterm::event::KeyCode::Char('i') => editor.mode = Mode::Insert,
+        crossterm::event::KeyCode::Char('i') => {
+            editor.mode = Mode::Insert;
+
+            if let Some(current_cell) = editor.document.get_mut_cell(&editor.cursor_position) {
+                current_cell.clear_display_text()
+            }
+        }
         crossterm::event::KeyCode::Char(':') => editor.mode = Mode::Command,
         crossterm::event::KeyCode::Char('d') => editor.mode = Mode::Delete,
         crossterm::event::KeyCode::Char('o') => {
             editor.command = Cell::from("irb".to_string());
             editor.execute_command();
-            handle_normal_mode_press(editor, crossterm::event::KeyCode::Char('j'));
+            handle_normal_mode_press(editor, crossterm::event::KeyCode::Char('j'), crossterm::event::KeyModifiers::empty());
             editor.mode = Mode::Insert;
         }
         crossterm::event::KeyCode::Char('O') => {
@@ -33,7 +55,13 @@ pub fn handle_normal_mode_press(editor: &mut Editor, key: crossterm::event::KeyC
 
 pub fn handle_insert_mode_press(editor: &mut Editor, key: crossterm::event::KeyCode) {
     match key {
-        crossterm::event::KeyCode::Esc => editor.mode = Mode::Normal,
+        crossterm::event::KeyCode::Esc => {
+            editor.mode = Mode::Normal;
+
+            if let Some(current_cell) = editor.document.get_mut_cell(&editor.cursor_position) {
+                current_cell.evaluate_cell()
+            }
+        }
         crossterm::event::KeyCode::Char(c) => {
             editor.document.insert_at(&editor.cursor_position, c);
         }
