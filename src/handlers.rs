@@ -27,11 +27,11 @@ pub fn handle_normal_mode_press(editor: &mut Editor, key: crossterm::event::KeyC
         | crossterm::event::KeyCode::Char('j' | 'k') => {
             editor.move_cursor(key);
         }
-        crossterm::event::KeyCode::Char('i') => {
+        crossterm::event::KeyCode::Char('i' | 'a') => {
             editor.mode = Mode::Insert;
 
             if let Some(current_cell) = editor.document.get_mut_cell(&editor.cursor_position) {
-                current_cell.clear_display_text()
+                current_cell.clear_evaluated(key == crossterm::event::KeyCode::Char('a'))
             }
         }
         crossterm::event::KeyCode::Char(':') => editor.mode = Mode::Command,

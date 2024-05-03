@@ -6,16 +6,16 @@ pub struct Cell {
     text: String,
     cursor_position: usize,
     view_start: usize,
-    display_text: String,
+    evaluated: String,
 }
 
 impl From<char> for Cell {
     fn from(c: char) -> Self {
         Self {
             text: String::from(c),
-            cursor_position: 1, // cell starts with 1 char
+            cursor_position: 1,
             view_start: 0,
-            display_text: String::default(),
+            evaluated: String::default(),
         }
     }
 }
@@ -26,31 +26,31 @@ impl From<String> for Cell {
             cursor_position: text.len(),
             text,
             view_start: 0,
-            display_text: String::default(),
+            evaluated: String::default(),
         }
     }
 }
 
 impl Cell {
     pub fn to_str(&self) -> &str {
-        if self.display_text.len() > 0 {
-            &self.display_text
+        if self.evaluated.len() > 0 {
+            &self.evaluated
         } else {
             &self.text
         }
     }
 
     pub fn to_string(&self) -> &String {
-        if self.display_text.len() > 0 {
-            &self.display_text
+        if self.evaluated.len() > 0 {
+            &self.evaluated
         } else {
             &self.text
         }
     }
 
     pub fn view(&self) -> String {
-        let text = if self.display_text.len() > 0 {
-            &self.display_text
+        let text = if self.evaluated.len() > 0 {
+            &self.evaluated
         } else {
             &self.text
         };
@@ -64,7 +64,11 @@ impl Cell {
     }
 
     pub fn len(&self) -> usize {
-        self.text.len()
+        if self.evaluated.len() > 0 {
+            self.evaluated.len()
+        } else {
+            self.text.len()
+        }
     }
 
     pub fn insert(&mut self, c: char) {
@@ -75,13 +79,13 @@ impl Cell {
 
     pub fn move_cursor(&mut self, key: crossterm::event::KeyCode) {
         match key {
-            crossterm::event::KeyCode::Left => {
+            crossterm::event::KeyCode::Left | crossterm::event::KeyCode::Char('h') => {
                 self.cursor_position = self.cursor_position.saturating_sub(1);
                 if self.cursor_position < self.view_start {
                     self.view_start = self.view_start.saturating_sub(1);
                 }
             }
-            crossterm::event::KeyCode::Right => {
+            crossterm::event::KeyCode::Right | crossterm::event::KeyCode::Char('l') => {
                 if self.cursor_position < self.len() {
                     self.cursor_position = self.cursor_position.saturating_add(1);
 
@@ -113,11 +117,22 @@ impl Cell {
 
     pub fn evaluate_cell(&mut self) {
         if self.text.starts_with("=") {
-            self.display_text = parser::parse(self.text.as_bytes());
+            self.evaluated = parser::parse(self.text.as_bytes());
+            self.cursor_position = 0;
+            self.view_start = 0;
         }
     }
 
-    pub fn clear_display_text(&mut self) {
-        self.display_text = "".to_string()
+    pub fn clear_evaluated(&mut self, place_at_end: bool) {
+        let was_evaluated = self.evaluated.len() > 0;
+        self.evaluated = "".to_string();
+
+        if place_at_end {
+            self.cursor_position = self.text.len();
+            self.view_start = self.text.len().saturating_sub(constants::CELL_VIEW_LEN);
+        } else if was_evaluated {
+            self.cursor_position = 1;
+            self.view_start = 0;
+        }
     }
 }
