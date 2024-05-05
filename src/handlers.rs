@@ -7,10 +7,6 @@ pub fn handle_normal_mode_press(editor: &mut Editor, key: crossterm::event::KeyC
         crossterm::event::KeyCode::Left
         | crossterm::event::KeyCode::Right
         | crossterm::event::KeyCode::Char('h' | 'l') => {
-            // TODO: use ctrl+(left|right|h|l) to move the cursor of the display text
-            // debating if i actually want to do it this way, or if i want to introduce a new mode
-            // for moving the display text cursor. kind of prefer this way given that it's an
-            // explicit distinction of behavior, because display text is _not_ editable by users
             if mods.contains(crossterm::event::KeyModifiers::CONTROL) {
                 if let Some(cell) = editor.document.get_mut_cell(&editor.cursor_position) {
                     cell.move_cursor(key);
@@ -58,9 +54,7 @@ pub fn handle_insert_mode_press(editor: &mut Editor, key: crossterm::event::KeyC
         crossterm::event::KeyCode::Esc => {
             editor.mode = Mode::Normal;
 
-            if let Some(current_cell) = editor.document.get_mut_cell(&editor.cursor_position) {
-                current_cell.evaluate_cell()
-            }
+            editor.document.evaluate_current_cell(&editor.cursor_position);
         }
         crossterm::event::KeyCode::Char(c) => {
             editor.document.insert_at(&editor.cursor_position, c);

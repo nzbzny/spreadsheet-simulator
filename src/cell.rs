@@ -1,4 +1,5 @@
 use crate::constants;
+use crate::document::Document;
 use crate::parser;
 
 #[derive(Default)] // TODO: implement Copy?
@@ -115,12 +116,10 @@ impl Cell {
         }
     }
 
-    pub fn evaluate_cell(&mut self) {
-        if self.text.starts_with("=") {
-            self.evaluated = parser::parse(self.text.as_bytes());
-            self.cursor_position = 0;
-            self.view_start = 0;
-        }
+    pub fn set_evaluated(&mut self, evaluated: String) {
+        self.evaluated = evaluated;
+        self.cursor_position = 0;
+        self.view_start = 0;
     }
 
     pub fn clear_evaluated(&mut self, place_at_end: bool) {

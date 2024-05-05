@@ -1,4 +1,5 @@
 use crate::editor::Position;
+use crate::parser;
 use crate::Cell;
 use crate::Row;
 
@@ -167,6 +168,23 @@ impl Document {
     pub fn delete_column(&mut self, at: usize) {
         for row in self.rows.values_mut() {
             row.delete_column(at);
+        }
+    }
+
+    pub fn evaluate_current_cell(&mut self, pos: &Position) {
+        let mut evaluated = "".to_string();
+        if let Some(current_cell) = self.get_cell(pos.col, pos.row) {
+            let text = current_cell.to_str();
+            evaluated = parser::parse(text.strip_prefix("="), self);
+        }
+        
+        if evaluated.is_empty() {
+            return;
+        }
+
+        // TODO: we know that cell exists. we can force this here
+        if let Some(current_mut_cell) = self.get_mut_cell(pos) {
+            current_mut_cell.set_evaluated(evaluated)
         }
     }
 }
